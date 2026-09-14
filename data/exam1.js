@@ -1263,5 +1263,1194 @@ const EXAM = {
   </div>`
   },
 
+  {
+    id: 'e1q11',
+    q: 'あなたはソリューションアーキテクトとして、AWS上でアプリケーションの開発およびテストを行っています。その際は、作業効率を高めるために、AWS環境のインフラ構成を一括にデプロイするような方法が求められています。それによって、開発環境やテスト環境を迅速にプロビジョニングしたり、容易に削除したりできるようにすることを目指しています。この要件を満たす最も適切なAWSサービスの設定はどれでしょうか。',
+    choices: [
+      'AWS CodePipelineを設定して、コードを展開するパイプラインを構成することで迅速な環境設定と削除を可能にする',
+      'CloudFormationによりテスト環境用のテンプレートを作成する。このテンプレートを利用してテスト環境をデプロイできるようにする',
+      'EC2インスタンスのAMIとBashスクリプトを利用して、テスト環境構築を設定する。スクリプトを実行することで、テスト環境をデプロイできるようにする',
+      'Amazon ECRにイメージを作成して、テスト環境構築を設定する。このイメージを利用して、テスト環境をデプロイできるようにする',
+    ],
+    answer: 1,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>「環境を作る」と聞くと選択肢がどれも正しそうに見えます。問題文をよく見ると、<strong>作るものの範囲</strong>と<strong>消すこと</strong>が指定されています。</p>
+  <table>
+    <tr><th style="width:38%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>AWS環境の<strong>インフラ構成</strong>を一括にデプロイ</td><td>サーバー1台ではなく、ネットワークもDBも含めた<strong>まるごと一式</strong></td></tr>
+    <tr><td>迅速にプロビジョニング</td><td>手作業で1つずつポチポチ作らない</td></tr>
+    <tr><td><strong>容易に削除</strong>できるようにする</td><td><mark>作るだけでなく、まとめて消せることが条件。ここが選択肢を分ける</mark></td></tr>
+  </table>
+  <p class="caption">開発・テスト環境は<strong>作っては壊すもの</strong>です。だから「消しやすさ」が要件に入っています。消し忘れたリソースは料金だけがかかり続けます。</p>
+
+  <h2>決め手は「1枚の設計図でまとめて作り、まとめて消せるか」</h2>
+  <p>AWS CloudFormation（クラウドフォーメーション）は、<strong>ほしい環境を文章で書いておくと、そのとおりに作ってくれる</strong>サービスです。書いたものをテンプレート、作られた環境のひとかたまりをスタックと呼びます。</p>
+
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ 1つずつ作る（手作業・スクリプト）</div>
+      <div class="nodes v">
+        <div class="node ng"><span class="lbl">VPCを作る</span></div>
+        <div class="node ng"><span class="lbl">サブネットを作る</span></div>
+        <div class="node ng"><span class="lbl">EC2を作る</span></div>
+        <div class="node ng"><span class="lbl">RDSを作る</span></div>
+      </div>
+      <p class="note">消すときも1つずつ。順番を間違えると消せず、消し忘れも起きます。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ テンプレート1枚から作る</div>
+      <div class="nodes v">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/res-aws-cloudformation-template.svg" alt=""></span>
+          <span class="lbl">テンプレート1枚</span><span class="sub">ほしい環境を書いたもの</span>
+        </div>
+        <div class="link ok"><span>この1枚から</span><span class="l">↓</span></div>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/res-aws-cloudformation-stack.svg" alt=""></span>
+          <span class="lbl">スタック（環境ひとかたまり）</span><span class="sub">VPC・EC2・RDSがまとめて作られる</span>
+        </div>
+        <div class="link ok"><span>いらなくなったら</span><span class="l">↓</span></div>
+        <div class="node ok"><span class="lbl">スタックを削除</span><span class="sub">中身も全部まとめて消える</span></div>
+      </div>
+      <p class="note">同じテンプレートから、開発用・テスト用と何個でも同じ環境を作れます。</p>
+    </div>
+  </div>
+  <p class="caption">ポイントは<strong>「スタック」というひとかたまりで管理される</strong>こと。作るのも消すのも、この単位で一発です。</p>
+
+  <p>たとえるなら、<mark>CloudFormationはプラモデルの設計図と組立キット</mark>です。同じ設計図があれば、何個でもまったく同じものが組み上がります。しかも箱ごと片づけられるので、部品が机に残ることもありません。手作業で1つずつ作るのは、設計図なしで毎回ちがう部品を探して組むようなものです。</p>
+
+  <h2>まぎらわしい4つを区別する</h2>
+  <p>どれも「デプロイ」に関わりますが、<strong>扱う対象がまったく違います</strong>。</p>
+  <table>
+    <tr><th style="width:26%">名前</th><th style="width:24%">何を作るもの</th><th>今回に合わない理由</th></tr>
+    <tr><td class="good">AWS CloudFormation</td><td class="good">インフラ一式</td><td class="good">VPC・EC2・RDSをまとめて作り、まとめて消せる</td></tr>
+    <tr><td>AWS CodePipeline</td><td>コードを届ける流れ</td><td class="bad">アプリの配信役。インフラは作らない</td></tr>
+    <tr><td>AMI（マシンイメージ）</td><td>サーバー1台分の型</td><td class="bad">EC2は複製できるが、ネットワークやDBは作れない</td></tr>
+    <tr><td>Amazon ECR</td><td>コンテナ画像の倉庫</td><td class="bad">画像を置く場所。環境を組み立てる仕組みではない</td></tr>
+  </table>
+  <p class="caption">AMIとECRはどちらも<strong>「1つの部品の型」</strong>です。今回ほしいのは<strong>組み立て全体の設計図</strong>なので、役者の大きさが足りません。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. CodePipelineでコードを展開するパイプラインを構成する</h3>
+      <p>CodePipelineは<strong>書いたコードを自動でテストして本番へ届ける流れ作業のベルトコンベア</strong>です。アプリを配るのが仕事で、その下のサーバーやネットワークは対象外です。</p>
+      <p class="why">ヒント1の「インフラ構成を一括にデプロイ」を担当できません。役割が違います。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>B. CloudFormationでテンプレートを作り、それを使ってデプロイする</h3>
+      <p>テンプレート1枚からスタックを作れば環境がまるごと立ち上がり、スタックを消せば中身も全部片づきます。同じテンプレートを使い回せるので、開発用とテスト用で構成がずれることもありません。</p>
+      <p class="why">「まとめて作る」「すぐ作る」「まとめて消す」の3つのヒントを、1つの仕組みで満たします。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. AMIとBashスクリプトで構築する</h3>
+      <p>AMIはEC2インスタンス1台をまるごと写し取った型です。同じサーバーを増やすのには向いています。ただしVPCやサブネット、データベースまでは含められません。</p>
+      <p>足りない部分をBashスクリプトで書くこともできますが、<strong>削除の手順も自分で書くことになります</strong>。順番を間違えれば消えずに残ります。</p>
+      <p class="why">ヒント3の「容易に削除」を満たせません。動きはしますが、手間が残ります。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. Amazon ECRにイメージを作成する</h3>
+      <p>ECRはコンテナのイメージ（プログラムの入った荷物箱の型）を保管する倉庫です。置き場所であって、環境を組み立てる仕組みではありません。</p>
+      <p class="why">ヒント1の「インフラ構成を一括にデプロイ」に対して、そもそも作る機能を持っていません。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：B　CloudFormationによりテスト環境用のテンプレートを作成する。このテンプレートを利用してテスト環境をデプロイできるようにする</strong></p>
+    <p class="oboe">覚え方 —— <strong>「インフラをまとめて作る・まとめて消す」＝ CloudFormation。</strong>この1行で決まります。区別のコツは担当範囲です。<strong>CloudFormationはインフラ、CodePipelineはコードの配達、AMIはサーバー1台の型、ECRはコンテナ画像の倉庫。</strong>そして<strong>「繰り返し作って壊す」「環境の差をなくしたい」と書いてあれば、答えはコード化（IaC）＝ CloudFormation</strong>です。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q12',
+    q: 'ある企業がAWSを活用してデータベースを構築するための要件を検討しています。あなたはソリューションアーキテクトとして、データベース要件に基づいて最適なAWSサービスを選定し、データベースを設定する役割を担っています。同社は、データベースに使用するサーバーのOS設定を自社で管理する考えです。この要件に適合するデータベース構築の方法を選択してください。',
+    choices: [
+      'Amazon RDSを利用してデータベースを構築する',
+      'Amazon DynamoDBを利用してデータベースを構築する',
+      'Amazon Auroraを選択してデータベースを構築する',
+      'Amazon EC2インスタンスを利用してデータベースを構築する',
+    ],
+    answer: 3,
+    explain: `
+  <h2>まず、問題文の中の「1つのヒント」</h2>
+  <p>この問題文は短く、条件はたった1つです。その1つが全部を決めます。</p>
+  <table>
+    <tr><th style="width:42%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>サーバーの<strong>OS設定を自社で管理する</strong></td><td><mark>OSにログインして設定を変えられる必要がある</mark></td></tr>
+  </table>
+  <p class="caption">OSとは、サーバーを動かしている基本ソフト（LinuxやWindows）のことです。「自社で管理する」とは、<strong>そこに入って自分で設定をいじる</strong>という意味になります。</p>
+
+  <h2>決め手は「OSに入れるかどうか」</h2>
+  <p>AWSのデータベースには2つの流儀があります。<strong>AWSが土台ごと面倒を見てくれる（マネージド）</strong>か、<strong>サーバーを1台借りて自分で全部やる</strong>かです。</p>
+
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ マネージドなDB（RDS・Aurora・DynamoDB）</div>
+      <div class="nodes v">
+        <div class="node ng"><span class="lbl">データベースの設定</span><span class="sub">ここは自分でできる</span></div>
+        <div class="link ng"><span>ここから下は触れない</span><span class="l">↓</span></div>
+        <div class="node dim"><span class="lbl">OS（基本ソフト）</span><span class="sub">ログインできない</span></div>
+        <div class="node dim"><span class="lbl">サーバー本体</span><span class="sub">AWSが持っている</span></div>
+      </div>
+      <p class="note">ラクな代わりに、OSには入れません。これは仕様です。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ EC2にDBを自分で入れる</div>
+      <div class="nodes v">
+        <div class="node ok"><span class="lbl">データベースの設定</span></div>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/gen-gear.svg" alt=""></span>
+          <span class="lbl">OS（基本ソフト）</span><span class="sub">ログインして自由に設定できる</span>
+        </div>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span>
+          <span class="lbl">EC2インスタンス</span><span class="sub">自分が借りたサーバー</span>
+        </div>
+      </div>
+      <p class="note">自由になる代わりに、更新もバックアップも自分の仕事になります。</p>
+    </div>
+  </div>
+  <p class="caption">灰色の箱は<strong>「AWSのものなので手が出せない」</strong>という意味です。マネージドなDBが便利なのは、この部分をAWSが引き受けているからです。</p>
+
+  <p>たとえるなら、<mark>RDSやAuroraは家具付きのマンション</mark>です。エアコンも冷蔵庫も最初から付いていて、壊れたら大家さんが直してくれます。その代わり<strong>壁に穴を開けることはできません</strong>。EC2は土地を借りて自分で家を建てるやり方。何でも好きにできますが、雨漏りの修理も自分でやります。</p>
+
+  <h3>この問題は「良し悪し」を聞いていない</h3>
+  <p>ふつうの設計では、運用の手間が小さいRDSやAuroraを選ぶのが定石です。ところがこの問題は<strong>「OSを自社で管理したい」と条件が指定されています</strong>。条件が先にある以上、便利かどうかではなく<strong>条件を満たせるかどうか</strong>で選びます。</p>
+
+  <h2>まぎらわしい4つを区別する</h2>
+  <table>
+    <tr><th style="width:22%">名前</th><th style="width:22%">種類</th><th style="width:22%">OSに入れるか</th><th>選ぶ場面</th></tr>
+    <tr><td>Amazon RDS</td><td>マネージドな関係DB</td><td class="bad">入れない</td><td>ふつうのDB運用。手間を減らしたいとき</td></tr>
+    <tr><td>Amazon Aurora</td><td>RDSの高性能版</td><td class="bad">入れない</td><td>速さと可用性がほしいとき</td></tr>
+    <tr><td>Amazon DynamoDB</td><td>マネージドなNoSQL</td><td class="bad">入れない</td><td>キーで引く超高速な読み書き</td></tr>
+    <tr><td class="good">EC2にDBを構築</td><td class="good">自前運用</td><td class="good">入れる</td><td class="good">OSの管理・特殊なDB製品やバージョンが要るとき</td></tr>
+  </table>
+  <p class="caption">AuroraはRDSの仲間なので、<strong>RDSがだめならAuroraもだめ</strong>です。選択肢に両方あるときは、まとめて判断できます。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. Amazon RDSを利用する</h3>
+      <p>RDSはAWSが用意してくれたデータベースの部屋です。バックアップもソフトの更新もAWSがやってくれます。その裏返しで、<strong>動いているサーバーにログインすることはできません</strong>。</p>
+      <p class="why">ヒントの「OS設定を自社で管理する」ができません。便利さと引き換えに、その自由がない仕組みです。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. Amazon DynamoDBを利用する</h3>
+      <p>DynamoDBはサーバーという考え方そのものが表に出てこないデータベースです。何台で動いているのかも利用者には見えません。</p>
+      <p class="why">OSどころかサーバーの存在すら見えないので、ヒントを満たしようがありません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. Amazon Auroraを選択する</h3>
+      <p>AuroraはRDSの一種で、速さと壊れにくさを高めたものです。中身が高性能になっただけで、<strong>AWSが土台を持つという点はRDSと同じ</strong>です。</p>
+      <p class="why">Aと同じ理由です。RDSがだめならAuroraもだめ、とまとめて判断できます。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>D. Amazon EC2インスタンスを利用してデータベースを構築する</h3>
+      <p>EC2は自分で借りたサーバーです。そこにMySQLやPostgreSQLなどを自分でインストールしてデータベースにします。OSにログインでき、設定ファイルもチューニングも自由です。</p>
+      <p class="why">「OS設定を自社で管理する」を満たせるのはこれだけです。手間は増えますが、問題が求めているのはそれです。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：D　Amazon EC2インスタンスを利用してデータベースを構築する</strong></p>
+    <p class="oboe">覚え方 —— <strong>「OSを管理したい」「OSにログインしたい」「特定のDB製品・バージョンを使いたい」と書いてあったら、答えはEC2にDBを自分で立てる。</strong>逆に言えば、<strong>これらが書かれていなければマネージド（RDS・Aurora・DynamoDB）が正解</strong>です。SAAの問題は基本「運用の手間を減らす」方向が正解ですが、<strong>条件が明示されたときは条件が優先します。</strong>ここを読み違えると、一番ラクな選択肢を選んで外します。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q13',
+    q: 'ある企業がAWS上でウェブアプリケーションを開発しています。このアプリケーションは複数のEC2インスタンスにホストされており、Amazon SQSキューからメッセージを取得して、EC2インスタンスがそのメッセージを処理し、処理結果をAmazon RDS DBインスタンスに書き込む仕組みです。処理完了後、メッセージはキューから削除されます。Amazon SQSキュー内のメッセージは重複しないものの、RDS DBインスタンスに保存されたデータには時折重複レコードが見受けられます。重複メッセージの発生を防ぐために、ソリューションアーキテクトはどのような対策を講じるべきでしょうか。',
+    choices: [
+      'ChangeMessageVisibility をAPI使用して、適切な可視性タイムアウト値を設定する',
+      'AddPermission APIを使用して、適切な権限を付与する',
+      'CreateQueue APIを使用して、新しいキューを作成する',
+      'ReceiveMessage APIを使用して、適切な待機時間を設定する',
+    ],
+    answer: 0,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>この問題は<strong>原因を先に突き止める</strong>タイプです。「どこが壊れているか」が分かれば、直す場所は1つしかありません。</p>
+  <table>
+    <tr><th style="width:38%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>キュー内のメッセージは<strong>重複しない</strong></td><td>入れる側は正しい。原因は<strong>取り出したあと</strong>にある</td></tr>
+    <tr><td>複数のEC2インスタンスが処理する</td><td>同じメッセージを別のインスタンスが取る余地がある</td></tr>
+    <tr><td>DBには時折<strong>重複レコード</strong></td><td><mark>同じメッセージが2回処理されている</mark></td></tr>
+  </table>
+  <p class="caption">「メッセージは重複していないのに結果は重複する」。この食い違いが問題の中心です。<strong>1件のメッセージが2回処理されている</strong>と考えるしかありません。</p>
+
+  <h2>決め手は「貸出中の札が早く外れている」こと</h2>
+  <p>SQS（キュー）は仕事の順番待ちの行列です。インスタンスがメッセージを取り出すと、そのメッセージはしばらく<strong>他の人から見えなくなります</strong>。この見えない時間を<strong>可視性タイムアウト</strong>と呼びます。処理が終わってメッセージを削除すれば、そこで完了です。</p>
+  <p>ところが<mark>処理が終わる前に可視性タイムアウトが切れると、メッセージがまた見えるようになります</mark>。すると別のインスタンスがそれを拾い、同じ仕事をもう一度やってしまいます。</p>
+
+  <div class="bars">
+    <div class="barrow"><div class="name">処理にかかる時間</div><div class="bar dark" style="width:100%">たとえば 5分</div></div>
+    <div class="barrow"><div class="name">可視性タイムアウト</div><div class="bar red" style="width:20%">30秒</div></div>
+  </div>
+  <p class="caption">タイムアウトのほうが短いと、<strong>処理の途中でメッセージが行列に戻ります</strong>。これが重複の正体です。</p>
+
+  <div class="nodes">
+    <div class="node">
+      <span class="ico"><img src="assets/icons/amazon-simple-queue-service.svg" alt=""></span>
+      <span class="lbl">SQSキュー</span><span class="sub">メッセージは1件だけ</span>
+    </div>
+    <div class="link ng"><span>30秒後に<br>また見えた</span><span class="l">⟶</span></div>
+    <div class="node ng many">
+      <span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span>
+      <span class="lbl">EC2が2台とも処理</span><span class="sub">1台目はまだ作業中</span>
+    </div>
+    <div class="link ng"><span>同じ結果を2回</span><span class="l">⟶</span></div>
+    <div class="node ng">
+      <span class="ico"><img src="assets/icons/amazon-rds.svg" alt=""></span>
+      <span class="lbl">RDS</span><span class="sub">重複レコード</span>
+    </div>
+  </div>
+  <p class="caption">直し方は<strong>可視性タイムアウトを処理時間より長くする</strong>こと。それだけで重複は止まります。</p>
+
+  <p>たとえるなら、<mark>可視性タイムアウトは図書館の「貸出中」の札</mark>です。本を借りると札が立ち、他の人は借りられません。ところが<strong>まだ読んでいる途中で札が勝手に外れる</strong>と、別の人が同じ本を持っていってしまいます。札の有効期間を、読み終わるまでの時間より長くしておけば解決します。</p>
+
+  <h2>まぎらわしい4つのAPIを区別する</h2>
+  <p>選択肢はどれもSQSの本物のAPIです。<strong>何を調整するものか</strong>で切り分けます。</p>
+  <table>
+    <tr><th style="width:30%">API</th><th style="width:30%">調整するもの</th><th>今回に効くか</th></tr>
+    <tr><td class="good">ChangeMessageVisibility</td><td class="good">取り出したメッセージが隠れている時間</td><td class="good">これが重複の原因。効く</td></tr>
+    <tr><td>ReceiveMessage の待機時間</td><td>メッセージが来るまで待つ時間（ロングポーリング）</td><td class="bad">空振りの問い合わせを減らすもの。重複とは無関係</td></tr>
+    <tr><td>AddPermission</td><td>誰がこのキューを使えるか</td><td class="bad">権限の話。動いている以上、権限は足りている</td></tr>
+    <tr><td>CreateQueue</td><td>新しいキューを作る</td><td class="bad">キューを増やしても、同じ現象がそこで起きる</td></tr>
+  </table>
+  <p class="caption">よく混同するのが<strong>「可視性タイムアウト」と「ロングポーリングの待機時間」</strong>です。前者は<strong>取り出したあと</strong>の話、後者は<strong>取り出す前</strong>の話。時間軸が逆だと覚えます。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>A. ChangeMessageVisibility で適切な可視性タイムアウト値を設定する</h3>
+      <p>メッセージが隠れている時間を、実際の処理時間より長く設定します。処理が終わるまで他のインスタンスからは見えないので、二重に拾われません。</p>
+      <p class="why">ヒント3の「同じメッセージが2回処理される」原因に、直接手を打っています。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. AddPermission APIで適切な権限を付与する</h3>
+      <p>AddPermissionは「どのアカウントにこのキューを使わせるか」を決めるものです。権限の話です。</p>
+      <p class="why">処理そのものは正常に動いています。権限が足りないなら、そもそもメッセージを1件も取り出せません。原因の場所が違います。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. CreateQueue APIで新しいキューを作成する</h3>
+      <p>キューを新しく作っても、可視性タイムアウトの設定が同じなら、そこでもまったく同じ重複が起きます。</p>
+      <p class="why">原因を持ち越すだけで、何も解決しません。入れ物を替えても中身の問題は残ります。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. ReceiveMessage APIで適切な待機時間を設定する</h3>
+      <p>これはロングポーリングの設定です。キューが空のときに「何もなかった」という返事をすぐ受け取らず、少し待ってから返してもらう仕組みで、無駄な問い合わせ回数と料金を減らします。</p>
+      <p class="why">調整しているのは<strong>取り出す前</strong>の待ち時間です。重複が起きるのは<strong>取り出したあと</strong>なので、ここをいじっても直りません。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：A　ChangeMessageVisibility をAPI使用して、適切な可視性タイムアウト値を設定する</strong></p>
+    <p class="oboe">覚え方 —— <strong>SQSで「同じメッセージが2回処理された」と来たら、可視性タイムアウトが処理時間より短い。</strong>これがほぼ唯一の原因です。直し方は<strong>可視性タイムアウトを処理時間より長くする</strong>こと。あわせて2つの時間を取り違えないようにします。<strong>可視性タイムアウト＝取り出したあとに隠れている時間（重複を防ぐ）、ロングポーリングの待機時間＝取り出す前に待つ時間（空振りを減らす）。</strong>なお<strong>「順番を守りたい」「絶対に1回だけ処理したい」と書いてあればFIFOキュー</strong>が答えになります。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q14',
+    q: 'ある企業はEC2インスタンス上に「イベントドリブンアプリケーション」を構築しました。アプリケーションのトラフィック急増時にも円滑に処理を続けられるよう、これらのインスタンスにはAuto Scalingグループが設定されています。しかし、最近、毎日17時から17時半の間にアプリケーションのパフォーマンスが急激に低下する問題が発生しています。この負荷増加が短時間であるため、Auto Scalingによるインスタンスの追加が間に合っていないようです。ソリューションアーキテクトとして、どのようにこの問題を改善するべきでしょうか。',
+    choices: [
+      'Auto Scalingが起動するインスタンス数の最大数を増加する',
+      'ELBによるロードバランシングを設定する',
+      'Route53によるトラフィックルーティングを設定する',
+      'Auto Scalingに対して、スケジュールされたスケーリングポリシーを追加する',
+    ],
+    answer: 3,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>問題文が<strong>原因まで書いてくれている</strong>親切なタイプです。「間に合っていない」の一言を見落とさないことがすべてです。</p>
+  <table>
+    <tr><th style="width:38%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td><strong>毎日</strong>17時から17時半</td><td><mark>いつ混むかが分かっている。予測できる</mark></td></tr>
+    <tr><td>負荷増加が短時間</td><td>気づいてから増やしていては終わってしまう</td></tr>
+    <tr><td>インスタンスの追加が<strong>間に合っていない</strong></td><td>台数が足りないのではなく、<strong>増え始めるのが遅い</strong></td></tr>
+  </table>
+  <p class="caption">「足りない」と「間に合わない」はまったく別の問題です。<strong>間に合わないのは時間の問題</strong>なので、数を増やしても解決しません。</p>
+
+  <h2>決め手は「反応してから増やす」か「先に増やしておく」か</h2>
+  <p>ふだんのAuto Scalingは<strong>混んできたことに気づいてから</strong>インスタンスを増やします。ところがEC2は起動してアプリが動き出すまでに数分かかります。混雑が30分しかないと、準備できたころには終わっています。</p>
+
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ 今のやり方（混んでから増やす）</div>
+      <div class="nodes v">
+        <div class="node ng"><span class="lbl">17:00　混み始める</span></div>
+        <div class="link ng"><span>数分かけて気づく</span><span class="l">↓</span></div>
+        <div class="node ng"><span class="lbl">17:05　増やし始める</span></div>
+        <div class="link ng"><span>起動に数分</span><span class="l">↓</span></div>
+        <div class="node ng"><span class="lbl">17:10　やっと使える</span><span class="sub">混雑はもう半分終わっている</span></div>
+      </div>
+      <p class="note">遅れているぶん、毎日必ず性能が落ちます。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ スケジュールで先に増やす</div>
+      <div class="nodes v">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-ec2-auto-scaling.svg" alt=""></span>
+          <span class="lbl">16:45　時刻で増やす</span><span class="sub">混む前に準備</span>
+        </div>
+        <div class="link ok"><span>起動が終わっている</span><span class="l">↓</span></div>
+        <div class="node ok"><span class="lbl">17:00　万全で迎える</span></div>
+        <div class="link ok"><span class="l">↓</span></div>
+        <div class="node ok"><span class="lbl">17:45　台数を戻す</span><span class="sub">余分な料金もかからない</span></div>
+      </div>
+      <p class="note">毎日同じ時刻に混むと分かっているので、待たずに先回りできます。</p>
+    </div>
+  </div>
+  <p class="caption">左右で変えたのは<strong>増やし始める時刻だけ</strong>です。台数もインスタンスの種類も変えていません。</p>
+
+  <h3>混むのは1日のうちこの30分だけ</h3>
+  <div class="day">
+    <div class="strip">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span class="on"></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="scale"><span>0時</span><span>6時</span><span>12時</span><span>18時</span><span>24時</span></div>
+    <p class="caption">赤いところが混雑する時間帯。<strong>場所が毎日決まっている</strong>ので、その直前に増やしておけば済みます。</p>
+  </div>
+
+  <p>たとえるなら、<mark>今のやり方は「行列ができてから店員を呼びに行く」</mark>状態です。呼ばれた店員が着替えて売り場に出るころには、お客さんは帰っています。スケジュールされたスケーリングは<strong>「ランチが混むと分かっているから11時半に店員を増やしておく」</strong>やり方です。</p>
+
+  <h2>Auto Scalingの増やし方を区別する</h2>
+  <p>Auto Scalingには増やし方が何種類かあります。<strong>何をきっかけに増やすか</strong>が違います。</p>
+  <table>
+    <tr><th style="width:26%">やり方</th><th style="width:28%">きっかけ</th><th>こう書かれていたら選ぶ</th></tr>
+    <tr><td>動的スケーリング<br>（ターゲット追跡・ステップ）</td><td>CPU使用率などの<strong>実際の数値</strong></td><td class="bad">いつ来るか分からない負荷。ただし気づくまでに時間がかかる</td></tr>
+    <tr><td class="good">スケジュールされた<br>スケーリング</td><td class="good"><strong>時刻</strong></td><td class="good">毎日／毎週／毎月、決まった時間に混む</td></tr>
+    <tr><td>予測スケーリング</td><td>過去の実績からの<strong>予想</strong></td><td class="bad">周期はあるが時刻がはっきり決まっていない</td></tr>
+    <tr><td>最大数の変更</td><td>（増やし方ではない）</td><td class="bad">天井を上げるだけ。増え始める速さは変わらない</td></tr>
+  </table>
+  <p class="caption">押さえどころは<strong>「最大数」は上限であって、スピードではない</strong>ということ。ここを取り違えると選択肢Aを選んでしまいます。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. Auto Scalingが起動するインスタンス数の最大数を増やす</h3>
+      <p>最大数は「ここまでなら増やしていい」という<strong>天井</strong>です。天井を高くしても、増やし始めるタイミングも起動にかかる時間も変わりません。</p>
+      <p class="why">ヒント3は「足りない」ではなく「<strong>間に合っていない</strong>」です。数の問題ではなく時間の問題なので、効きません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. ELBによるロードバランシングを設定する</h3>
+      <p>ELB（ロードバランサー）は、いま動いているサーバーに通信を均等に配る係です。全員が忙しいときに、配り方を工夫しても処理能力は増えません。</p>
+      <p class="why">足りないのは配分ではなくサーバーの数です。ヒント3の原因に対して効き目がありません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. Route53によるトラフィックルーティングを設定する</h3>
+      <p>Route 53はどのサーバーの住所を教えるかを決める電話帳です。案内先を変えられても、案内した先が混んでいることには変わりありません。</p>
+      <p class="why">Bと同じく振り分けの話です。増やすタイミングの問題には触れていません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>D. スケジュールされたスケーリングポリシーを追加する</h3>
+      <p>「毎日16時45分に台数を増やし、17時45分に戻す」と時刻で指定します。混雑が始まる前に準備が終わっているので、立ち上がりの数分を待つ必要がありません。</p>
+      <p class="why">ヒント1の「毎日決まった時刻」という条件をそのまま利用して、ヒント3の「間に合わない」を解消します。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：D　Auto Scalingに対して、スケジュールされたスケーリングポリシーを追加する</strong></p>
+    <p class="oboe">覚え方 —— <strong>「毎日」「毎週」「決まった時刻に」混むと書いてあれば、スケジュールされたスケーリング。</strong>迷ったときは、問題文が<strong>「足りない」なのか「間に合わない」なのか</strong>を見ます。<strong>足りない → 最大数やインスタンスサイズの話。間に合わない → 増やすタイミングの話。</strong>そして<strong>ELBやRoute 53は振り分ける道具であって、処理能力を増やす道具ではありません。</strong>この2つが選択肢に混ざっていたら、たいていダミーです。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q15',
+    q: 'ある企業はAWS上で基幹システムを運用しており、このシステムはAmazon Aurora MySQLデータベースを用いてデータを管理しています。保存データは業務において極めて重要であるため、データセンター障害に備えた構成が求められます。要件としては、データセンター障害が発生した際には、数分以内にデータベースを再稼働させることができるようにして、ダウンタイムを最小限に抑える必要があります。この要件を満たすために、コスト効率の良いソリューションを選定してください。',
+    choices: [
+      'Amazon Aurora Global Databaseによる高速フェールオーバーを有効化する。これによって、プライマリDBに障害が発生した場合でも、スタンバイDBが処理を継続する',
+      'Amazon Aurora Global Databaseを有効化する。プライマリDBに障害が発生した場合は、スタンバイDBインスタンスをプライマリDBインスタンスに昇格させる',
+      'Aurora DBクラスターのレプリカを複数アベイラビリティゾーンに展開する。プライマリDBに障害が発生した場合は、レプリカの１つをプライマリDBに昇格させる',
+      'AuroraDBクラスターのスナップショットを作成して、Amazon Data Lifecycle Managerを設定する。プライマリDBに障害が発生した場合は、Amazon DLMによってスナップショットから迅速にDBが復元される',
+    ],
+    answer: 2,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>この問題のカギは<strong>「どのくらいの規模の障害に備えるのか」</strong>です。備える範囲を大きくしすぎると、要件は満たしてもコストで落とされます。</p>
+  <table>
+    <tr><th style="width:38%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td><strong>データセンター</strong>障害に備える</td><td><mark>建物1つの障害。AWSでいうアベイラビリティゾーン（AZ）1つ分</mark></td></tr>
+    <tr><td>数分以内に再稼働</td><td>バックアップから戻していては間に合わない。待機役が動いている必要がある</td></tr>
+    <tr><td>コスト効率の良い</td><td>要件を満たす中で<strong>いちばん安い</strong>ものを選ぶ</td></tr>
+  </table>
+  <p class="caption">「データセンター障害」を「リージョン全体の災害」と読み違えると、選択肢AやBに行きます。<strong>データセンター1つ＝AZ1つ</strong>です。</p>
+
+  <h2>決め手は「AZ障害か、リージョン障害か」</h2>
+  <p>AWSの場所には大きさの段階があります。ここを混同すると、必要以上に大きな備えを選んでしまいます。</p>
+  <table>
+    <tr><th style="width:26%">用語</th><th style="width:30%">大きさ</th><th>たとえ</th></tr>
+    <tr><td class="good">アベイラビリティゾーン（AZ）</td><td class="good">データセンター1つ（または数棟）</td><td class="good">同じ市内の別の建物</td></tr>
+    <tr><td>リージョン</td><td>複数のAZをまとめた地域</td><td>東京、シンガポールといった別の国・都市</td></tr>
+  </table>
+  <p class="caption">1つのリージョンには、離れた場所にあるAZが複数あります。<strong>片方が停電しても、もう片方は生きています。</strong></p>
+
+  <div class="zone">
+    <span class="zlbl"><img src="assets/icons/group-region.svg" alt="">東京リージョン</span>
+    <div class="zrow">
+      <div class="zone ok">
+        <span class="zlbl">AZ-a</span>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-aurora.svg" alt=""></span>
+          <span class="lbl">プライマリDB</span><span class="sub">いま使っている</span>
+        </div>
+      </div>
+      <div class="zone ok">
+        <span class="zlbl">AZ-c</span>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-aurora.svg" alt=""></span>
+          <span class="lbl">レプリカ</span><span class="sub">障害時はここが昇格</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">AZ-aのデータセンターが落ちても、AZ-cのレプリカが自動でプライマリに切り替わります。切り替えは<strong>ふつう30秒ほど</strong>で終わるので、「数分以内」を余裕で満たします。</p>
+
+  <h2>備える範囲とコストの関係</h2>
+  <div class="vs">
+    <div class="pane good">
+      <div class="pane-h">◯ 同じリージョンの複数AZ</div>
+      <div class="nodes v">
+        <div class="node ok"><span class="lbl">AZ-a のプライマリ</span></div>
+        <div class="link ok"><span>同じリージョン内で複製</span><span class="l">↓</span></div>
+        <div class="node ok"><span class="lbl">AZ-c のレプリカ</span><span class="sub">自動で昇格。数十秒</span></div>
+      </div>
+      <p class="note">データセンター障害に必要十分。追加費用はレプリカの分だけです。</p>
+    </div>
+    <div class="pane bad">
+      <div class="pane-h">✕ Aurora Global Database</div>
+      <div class="nodes v">
+        <div class="node ng"><span class="lbl">東京リージョンのDB</span></div>
+        <div class="link ng"><span>別のリージョンへ複製</span><span class="l">↓</span></div>
+        <div class="node ng"><span class="lbl">大阪／シンガポールのDB</span><span class="sub">まるごと1式ぶんの費用</span></div>
+      </div>
+      <p class="note">リージョンごと使えなくなる大災害への備え。今回はそこまで求められていません。</p>
+    </div>
+  </div>
+  <p class="caption">どちらも数分以内に復旧できます。違うのは<strong>備える範囲と値段</strong>だけ。だから「コスト効率」の一言で答えが決まります。</p>
+
+  <p>たとえるなら、<mark>AZをまたぐ構成は「近所のもう1棟にも同じ設備を置く」</mark>やり方です。1棟が停電しても、もう1棟で続けられます。Global Databaseは<strong>海外に支社をもう1つ作る</strong>ようなもの。街ごと被災したときには頼れますが、<strong>「近所の建物が停電した」だけの話に海外支社を建てるのは、明らかにやりすぎです。</strong></p>
+
+  <h2>まぎらわしい4つを区別する</h2>
+  <table>
+    <tr><th style="width:26%">やり方</th><th style="width:24%">どこまで守れるか</th><th style="width:20%">復旧の速さ</th><th>コスト</th></tr>
+    <tr><td class="good">Auroraレプリカを複数AZに</td><td class="good">AZ（データセンター）障害</td><td class="good">数十秒で自動昇格</td><td class="good">レプリカの分だけ</td></tr>
+    <tr><td>Aurora Global Database</td><td>リージョン全体の災害</td><td>1分ほど</td><td class="bad">別リージョンに1式ぶん</td></tr>
+    <tr><td>スナップショットから復元</td><td>データの消失</td><td class="bad">数十分〜数時間</td><td>安い</td></tr>
+  </table>
+  <p class="caption">選ぶ順番は<strong>①要件（守る範囲と速さ）を満たすか → ②その中でいちばん安いか</strong>。この順でしか判断できません。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. Aurora Global Databaseの高速フェイルオーバーを有効化する</h3>
+      <p>Global Databaseは<strong>別のリージョンにもう1つデータベースを持つ</strong>仕組みです。リージョンまるごとが使えなくなる大災害に備えるためのもので、速さは申し分ありません。</p>
+      <p class="why">要件は満たしますが、備える範囲が大きすぎます。ヒント3の「コスト効率」で落ちます。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. Aurora Global Databaseを有効化し、障害時にスタンバイを昇格させる</h3>
+      <p>Aと同じくGlobal Databaseです。昇格を自動でやるか手動でやるかの違いしかありません。</p>
+      <p class="why">Aと同じ理由です。<strong>Global Databaseと書かれた時点で、リージョンをまたぐ構成＝割高</strong>と判断できます。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>C. Auroraレプリカを複数のアベイラビリティゾーンに展開し、障害時に昇格させる</h3>
+      <p>同じリージョンの中で、別のデータセンター（AZ）にレプリカを置きます。プライマリが止まればレプリカが自動でプライマリに昇格し、数十秒で処理を再開します。</p>
+      <p class="why">データセンター障害に必要十分で、リージョンをまたがないぶん安い。3つのヒントを同時に満たします。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. スナップショットを作成し、Data Lifecycle Managerで管理する</h3>
+      <p>スナップショットは<strong>データの控え</strong>です。Data Lifecycle Managerは、その取得と削除を自動で回してくれる仕組みで、データを失わないためには有効です。</p>
+      <p>ただし復元は、新しいデータベースを一から作り直す作業です。データ量が多いほど時間がかかり、数十分から数時間かかります。</p>
+      <p class="why">ヒント2の「数分以内に再稼働」を満たせません。備えとしては必要ですが、この要件の答えにはなりません。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：C　Aurora DBクラスターのレプリカを複数アベイラビリティゾーンに展開する。プライマリDBに障害が発生した場合は、レプリカの１つをプライマリDBに昇格させる</strong></p>
+    <p class="oboe">覚え方 —— <strong>「データセンター障害」＝AZ1つの障害。答えは同じリージョンの複数AZで足ります。</strong>「リージョン全体の災害」「別の国からも使いたい」と書いてあって初めてGlobal Databaseです。そして<strong>「数分以内」と言われたらスナップショットからの復元は消えます</strong>（あれは数十分以上かかる手段です）。判断は必ず<strong>①要件を満たすか → ②その中で最も安いか</strong>の順で。<strong>「コスト効率」の一言は、要件を満たす選択肢が複数あるときの決勝戦の合図</strong>です。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q16',
+    q: 'あなたはソリューションアーキテクトとしてAmazon DynamoDBテーブルにデータを書き込むためのAWS Lambda関数を作成しました。このLambda関数がDynamoDBテーブルを操作できるように権限を設定する必要があります。どのように権限を設定すればよいでしょうか。',
+    choices: [
+      'Lambda関数に適切な権限を付与したIAMユーザーを設定してDynamoDBへのアクセスを許可する',
+      'Lambda関数に適切な権限を付与したIAMロールを設定してDynamoDBへのアクセスを許可する',
+      'Lambda関数に適切な権限を付与したIAMポリシーを設定してDynamoDBへのアクセスを許可する',
+      'Lambda関数に適切な権限を付与したリソースポリシーを設定してDynamoDBへのアクセスを許可する',
+    ],
+    answer: 1,
+    explain: `
+  <h2>まず、問題文の中の「2つのヒント」</h2>
+  <p>選択肢は4つとも「適切な権限を付与した◯◯を設定して」という同じ形です。違うのは◯◯の部分だけ。つまりこの問題は<strong>IAMの用語を正しく区別できるか</strong>を聞いています。</p>
+  <table>
+    <tr><th style="width:40%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td><strong>Lambda関数が</strong>DynamoDBを操作する</td><td><mark>権限を受け取るのは人ではなく、AWSのサービス</mark></td></tr>
+    <tr><td>Lambda関数<strong>に</strong>設定する</td><td>Lambda側に付けるもの。DynamoDB側の設定ではない</td></tr>
+  </table>
+
+  <h2>決め手は「人か、サービスか」</h2>
+  <p>IAM（アイアム）はAWSの<strong>身分証と許可証を管理する仕組み</strong>です。ここでいちばん大事な区別は、<strong>権限を持つのが人なのかサービスなのか</strong>です。</p>
+
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ IAMユーザー（人のための身分証）</div>
+      <div class="nodes v">
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/gen-user.svg" alt=""></span>
+          <span class="lbl">IAMユーザー</span><span class="sub">人ひとりに1つ</span>
+        </div>
+        <div class="link ng"><span>アクセスキーを<br>コードに書くことになる</span><span class="l">↓</span></div>
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/aws-lambda.svg" alt=""></span>
+          <span class="lbl">Lambda関数</span><span class="sub">鍵が漏れたら終わり</span>
+        </div>
+      </div>
+      <p class="note">鍵を自分で配って管理することになります。AWSが避けるべきとしているやり方です。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ IAMロール（貸し出す許可証）</div>
+      <div class="nodes v">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/res-aws-identity-access-management-role.svg" alt=""></span>
+          <span class="lbl">IAMロール</span><span class="sub">誰でも一時的に借りられる</span>
+        </div>
+        <div class="link ok"><span>実行のたびに自動で貸与</span><span class="l">↓</span></div>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/aws-lambda.svg" alt=""></span>
+          <span class="lbl">Lambda関数</span><span class="sub">鍵を持たなくていい</span>
+        </div>
+        <div class="link ok"><span>許された操作だけ</span><span class="l">↓</span></div>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-dynamodb.svg" alt=""></span>
+          <span class="lbl">DynamoDB</span>
+        </div>
+      </div>
+      <p class="note">Lambdaが動くたびに一時的な資格情報が渡され、終われば消えます。</p>
+    </div>
+  </div>
+  <p class="caption">ロールを使うと<strong>コードの中に鍵を一切書かずに済みます</strong>。これが「サービスにはロール」と決まっている一番の理由です。</p>
+
+  <p>たとえるなら、<mark>IAMユーザーは自分専用の社員証</mark>です。持ち主が決まっていて、貸し借りは禁止。落とすと大問題になります。<strong>IAMロールは受付で借りる来客用の入館証</strong>です。誰が使うかは決まっておらず、その場で借りて、用が済んだら返します。今回の「Lambda関数」は社員ではないので、入館証を借りるほうが自然です。</p>
+
+  <h2>まぎらわしい4つを区別する</h2>
+  <p>ここが試験で最も問われるところです。<strong>「誰が」と「何ができるか」は別物</strong>だと覚えます。</p>
+  <table>
+    <tr><th style="width:22%">名前</th><th style="width:24%">正体</th><th style="width:22%">たとえ</th><th>まちがえやすい点</th></tr>
+    <tr><td>IAMユーザー</td><td>「誰が」</td><td>社員証</td><td class="bad">人のためのもの。サービスには使わない</td></tr>
+    <tr><td class="good">IAMロール</td><td class="good">「誰が」（一時的に借りる）</td><td class="good">来客用の入館証</td><td class="good">サービスに権限を渡すときはこれ</td></tr>
+    <tr><td>IAMポリシー</td><td>「何ができるか」</td><td>許可内容を書いた紙</td><td class="bad">単体では効かない。ユーザーかロールに貼って初めて働く</td></tr>
+    <tr><td>リソースポリシー</td><td>「誰に使わせるか」</td><td>入口に貼る入館条件</td><td class="bad">向きが逆。資源の側が相手を受け入れる設定</td></tr>
+  </table>
+  <p class="caption">ポリシーは<strong>紙</strong>、ユーザーとロールは<strong>それを持つ人</strong>。紙だけ用意しても、誰かが持たないと意味がありません。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. IAMユーザーを設定して許可する</h3>
+      <p>IAMユーザーは人のための身分証です。これをLambdaに使わせるには、アクセスキーという鍵を発行してコードに書き込むことになります。<strong>鍵が漏れれば誰でもDynamoDBを操作できてしまいます。</strong></p>
+      <p class="why">ヒント1の「権限を受け取るのはサービス」に合いません。AWSが明確に避けるべきとしているやり方です。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>B. IAMロールを設定して許可する</h3>
+      <p>Lambda関数に実行ロールを設定すると、関数が動くたびに一時的な資格情報が自動で渡されます。有効期限があるので、漏れたときの被害も限られます。鍵の管理も不要です。</p>
+      <p class="why">「AWSサービスに権限を渡す」場面の正解の形そのものです。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. IAMポリシーを設定して許可する</h3>
+      <p>ポリシーは<strong>「DynamoDBに書き込んでよい」と書かれた紙</strong>です。書いてあるだけでは効きません。ユーザーかロールに貼り付けて、はじめて権限になります。</p>
+      <p>実際にやるべきことは「ポリシーを貼ったロールを作り、そのロールをLambdaに設定する」です。<strong>この選択肢はロールの部分が抜けています。</strong></p>
+      <p class="why">いちばん惜しい選択肢です。ポリシー単体では誰にも紐づかないので、権限として機能しません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. リソースポリシーを設定して許可する</h3>
+      <p>リソースポリシーは<strong>資源の側が「誰に使わせるか」を決める</strong>設定です。Lambdaのリソースポリシーなら「誰がこのLambda関数を呼んでよいか」を決めるもので、向きが逆になります。</p>
+      <p class="why">ほしいのは「Lambdaが他のサービスを操作する」権限です。<strong>呼ばれる側の設定では、呼びに行く権限になりません。</strong></p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：B　Lambda関数に適切な権限を付与したIAMロールを設定してDynamoDBへのアクセスを許可する</strong></p>
+    <p class="oboe">覚え方 —— <strong>AWSサービスに権限を渡すなら必ずIAMロール。人ならIAMユーザー。</strong>「Lambdaが」「EC2が」「ECSタスクが」と<strong>主語がサービスなら、答えはロールで確定</strong>します。あわせて2つの向きを押さえます。<strong>ポリシーは「何ができるか」で、単体では効きません。リソースポリシーは「自分を誰に使わせるか」で、向きが逆です。</strong>選択肢に「アクセスキーをコードに書く」系が出てきたら、それはほぼ必ず不正解です。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q17',
+    q: 'ある企業が、オンプレミス環境にある静的ウェブサイトをAWSに移行することを決定しました。このウェブサイトは、世界中のユーザーにアクセスされるグローバルなサイトであり、迅速に全てのユーザーが利用できることが求められています。また、その際は、コスト効率の良いアーキテクチャであることも要件となっています。これらの要件を満たすために、ソリューションアーキテクトはどのような対策を講じるべきでしょうか。',
+    choices: [
+      '静的ウェブホスティングをS3バケットに構成する。S3バケットを複数のAWSリージョンにレプリケートして、各リージョンに配信する',
+      '静的ウェブホスティングをS3バケットに構成する。Amazon CloudFrontディストリビューションを構成し、S3バケットをオリジンとして設定する',
+      '静的ウェブホスティングをS3バケットに構成する。Route53を利用して、各リージョンにルーティングするように構成する',
+      '静的ウェブホスティングをS3バケットに構成する。S3バケットを複数のAWSリージョンにレプリケートして、Route53を利用して、各リージョンにルーティングするように構成する',
+    ],
+    answer: 1,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>4つの選択肢はどれも「S3で静的ウェブホスティング」から始まります。<strong>そこから先の速くする方法</strong>だけが違います。</p>
+  <table>
+    <tr><th style="width:38%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>静的ウェブサイト</td><td>中身が変わらないファイル。S3に置けば動く</td></tr>
+    <tr><td>世界中のユーザー／迅速に</td><td><mark>遠くのユーザーにも速く届ける仕組みが要る</mark></td></tr>
+    <tr><td>コスト効率の良い</td><td>同じ結果なら、置き場所は増やさないほうがよい</td></tr>
+  </table>
+  <p class="caption">「速く届ける」と「安く済ませる」は、ふつうなら相反します。両立できる方法が1つだけあります。</p>
+
+  <h2>決め手は「倉庫を増やすか、コンビニに置くか」</h2>
+  <p>遠くのユーザーが遅いのは、<strong>データが物理的に遠いから</strong>です。日本のサーバーにブラジルからアクセスすれば、地球の裏側まで往復することになります。解決策は2通りあります。</p>
+
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ 各リージョンにバケットを複製する</div>
+      <div class="nodes v">
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+          <span class="lbl">東京のバケット</span>
+        </div>
+        <div class="link ng"><span>まるごと複製</span><span class="l">↓</span></div>
+        <div class="node ng many">
+          <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+          <span class="lbl">各リージョンのバケット</span><span class="sub">保存料金が地域の数だけかかる</span>
+        </div>
+      </div>
+      <p class="note">更新のたびに全部へ配り直し。置き場所も管理も増えます。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ CloudFrontでキャッシュする</div>
+      <div class="nodes v">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+          <span class="lbl">S3バケット（オリジン）</span><span class="sub">1つのまま</span>
+        </div>
+        <div class="link ok"><span>初回だけ取りに行く</span><span class="l">↓</span></div>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/res-amazon-cloudfront-edge-location.svg" alt=""></span>
+          <span class="lbl">世界中のエッジロケーション</span><span class="sub">2回目からは手元から返す</span>
+        </div>
+      </div>
+      <p class="note">バケットは1つ。更新もそこを直すだけで済みます。</p>
+    </div>
+  </div>
+  <p class="caption">CloudFrontは<strong>世界中に置かれた中継所（エッジロケーション）</strong>にコピーを預けておく仕組みです。ユーザーは自分にいちばん近い中継所から受け取ります。</p>
+
+  <div class="nodes">
+    <div class="node">
+      <span class="ico"><img src="assets/icons/gen-users.svg" alt=""></span>
+      <span class="lbl">世界中の<br>ユーザー</span>
+    </div>
+    <div class="link ok"><span>すぐ近くから</span><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-cloudfront.svg" alt=""></span>
+      <span class="lbl">CloudFront</span><span class="sub">近くの中継所が返す</span>
+    </div>
+    <div class="link"><span>初回のみ</span><span class="l">⟶</span></div>
+    <div class="node">
+      <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+      <span class="lbl">S3バケット</span><span class="sub">1つだけ</span>
+    </div>
+  </div>
+  <p class="caption">オリジンへ取りに行くのは<strong>最初の1回だけ</strong>。以降は中継所のコピーが使われるので、S3への通信料も減ります。</p>
+
+  <p>たとえるなら、<mark>CloudFrontは全国のコンビニに人気商品を置いておくやり方</mark>です。倉庫は1つのままで、お客さんは近所の店で買えます。一方リージョンごとの複製は<strong>各地に倉庫そのものを建てる</strong>やり方。速くはなりますが、家賃も在庫管理も地域の数だけ増えます。</p>
+
+  <h2>まぎらわしい4つを区別する</h2>
+  <p>どれも「速くする」ように聞こえますが、やっていることが違います。</p>
+  <table>
+    <tr><th style="width:26%">名前</th><th style="width:30%">やっていること</th><th>速くなるか</th></tr>
+    <tr><td class="good">CloudFront</td><td class="good">近くの中継所にコピーを置く</td><td class="good">なる。置き場所は1つのまま</td></tr>
+    <tr><td>S3レプリケーション</td><td>バケットそのものを複製する</td><td class="bad">なるが、保存料金が地域の数だけかかる</td></tr>
+    <tr><td>Route 53</td><td>どの住所につなぐかを教える</td><td class="bad">案内するだけ。遠い相手は遠いまま</td></tr>
+    <tr><td>Global Accelerator</td><td>AWSの専用網へ早く入れる</td><td class="bad">動くアプリ向け。静的ファイルならCloudFront</td></tr>
+  </table>
+  <p class="caption">押さえどころは<strong>Route 53は電話帳であって、配送業者ではない</strong>ということ。宛先を教えても、距離は縮まりません。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. S3バケットを複数リージョンにレプリケートして各リージョンで配信する</h3>
+      <p>各地にバケットを置けば確かに近くなります。ただし保存料金が地域の数だけかかり、ファイルを1つ直すたびに全リージョンへ反映を待つことになります。</p>
+      <p class="why">ヒント2は満たしますが、ヒント3の「コスト効率」で落ちます。しかも<strong>宛先を振り分ける仕組みがない</strong>ので、ユーザーがどこにつなぐかを決められません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>B. CloudFrontディストリビューションを構成し、S3バケットをオリジンにする</h3>
+      <p>バケットは1つのまま、世界中の中継所がコピーを預かります。ユーザーは近くの中継所から受け取るので速く、更新はオリジンを直すだけで済みます。</p>
+      <p class="why">速さ（ヒント2）と安さ（ヒント3）を同時に満たします。静的サイトの定番の形です。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. Route 53で各リージョンにルーティングする</h3>
+      <p>Route 53は「このサイトはここにあります」と住所を教える電話帳です。ところがバケットは1つしかないので、<strong>どこへ案内しても同じ場所に届きます</strong>。</p>
+      <p class="why">案内先が増えていないので、ヒント2の「速く届ける」が実現しません。振り分ける先がそもそもありません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. 複数リージョンにレプリケートし、Route 53でルーティングする</h3>
+      <p>AとCを組み合わせたもので、確かに動きます。各地にバケットがあり、Route 53が近い地域へ案内します。</p>
+      <p class="why">動くけれど<strong>バケットの数だけ料金と管理が増えます</strong>。CloudFrontなら同じことがバケット1つで実現できるので、ヒント3で負けます。</p>
+    </div>
+  </div>
+
+  <h2>「速さ」と「コスト」で並べると</h2>
+  <table>
+    <tr><th style="width:14%">選択肢</th><th style="width:22%">速くなるか</th><th style="width:28%">かかるコスト</th><th>判定</th></tr>
+    <tr><td class="good">B</td><td class="good">なる</td><td class="good">バケット1つ＋配信料</td><td class="good">要件どおり</td></tr>
+    <tr><td>D</td><td class="good">なる</td><td class="bad">バケットの数だけ</td><td class="bad">動くが割高</td></tr>
+    <tr><td>A</td><td>近くはなる</td><td class="bad">バケットの数だけ</td><td class="bad">振り分けもできない</td></tr>
+    <tr><td>C</td><td class="bad">ならない</td><td>安い</td><td class="bad">要件を満たさない</td></tr>
+  </table>
+
+  <div class="kotae">
+    <p><strong>答え：B　静的ウェブホスティングをS3バケットに構成する。Amazon CloudFrontディストリビューションを構成し、S3バケットをオリジンとして設定する</strong></p>
+    <p class="oboe">覚え方 —— <strong>「静的コンテンツ」＋「世界中に速く」＝ S3 ＋ CloudFront。</strong>これはAWSで最も出題される定番の組み合わせです。押さえどころは<strong>CloudFrontを使えば置き場所は1つのままでよい</strong>こと。だから<strong>「コスト効率」と書かれているのに複製する選択肢は、動いても負けます。</strong>そして<strong>Route 53は宛先を教えるだけで、それ自体は何も速くしません。</strong>この線引きで、配信系の問題はほぼ即決できます。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q18',
+    q: 'ある企業では、AWSを活用した発注管理アプリケーションの設計を行っています。このアプリケーションを通じてユーザーが発注を行うと、12時間以内にその処理が完了する必要があります。発注内容は多様であるため、注文を分類し、適切に管理することも求められています。費用対効果と運用効率を最大限に高めながら、これらの要件を満たすための最適なソリューションはどれでしょうか。',
+    choices: [
+      '注文内容に応じて、複数のAmazon Kinesis Data Streamsシャードを作成する。適切なシャードにメッセージを送信するように、Amazon SNSトピックを作成する。データストリームに関連するSNSトピックにサブスクライブするようにアプリケーションを設定する',
+      '注文内容に応じて、複数のAWS Lambda関数とAmazon SNSトピックを作成する。Lambda関数を関連するSNSトピックにサブスクライブして、注文に応じたSNSトピックにメッセージを発行するように設定する',
+      'Amazon SNSトピックを１つ作成して、このSNSトピックに複数のAmazon SQSキューをサブスクライブする。SNSトピックにフィルターを設定して注文内容に応じて適切なSQSキューに適切なメッセージを送信するようにメッセージをフィルタリングする。注文に応じたSQSキューからメッセージを受信するようにバックエンドサーバーを設定する',
+      '注文内容に応じて、複数のAmazon Kinesis Data Streamsのシャードを作成する。適切なシャードにメッセージを送信するように、ウェブアプリケーションを設定する。アプリケーションサーバーの各バックエンドグループを設定して、Kinesis Client Libraryを使用してそれぞれのデータストリームからのメッセージをプールする',
+    ],
+    answer: 2,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>選択肢が長くて読みづらい問題です。こういうときほど、<strong>問題文の条件を先に3つ取り出してから</strong>選択肢を見ます。</p>
+  <table>
+    <tr><th style="width:38%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td><strong>12時間以内</strong>に処理が完了</td><td><mark>すぐ処理しなくてよい。いったん溜めておける仕組みが向いている</mark></td></tr>
+    <tr><td>注文を<strong>分類</strong>して管理</td><td>種類ごとに行き先を分ける必要がある</td></tr>
+    <tr><td>費用対効果と運用効率</td><td>作り込みが少なく、種類が増えても手直しの小さい形</td></tr>
+  </table>
+  <p class="caption">「12時間以内」は非常にゆるい条件です。<strong>リアルタイム処理は求められていない</strong>という意味なので、ここで選択肢がふるいにかけられます。</p>
+
+  <h2>決め手は「1回の放送を、種類ごとの受け箱に仕分ける」</h2>
+  <p>登場するのは2つのサービスです。<strong>SNS（エスエヌエス）は校内放送</strong>で、1回しゃべると聞いている全員に届きます。<strong>SQS（エスキューエス）は各クラスの連絡ボックス</strong>で、入れたものは誰かが取り出すまで残ります。</p>
+  <p>この2つを組み合わせると、<strong>1件の注文を、種類に応じた受け箱に自動で仕分けられます</strong>。しかもSNSにはフィルターという機能があり、「これは書籍の注文」といった目印を見て、<mark>該当する受け箱にだけ届ける</mark>ことができます。</p>
+
+  <div class="nodes">
+    <div class="node">
+      <span class="ico"><img src="assets/icons/gen-users.svg" alt=""></span>
+      <span class="lbl">発注</span>
+    </div>
+    <div class="link"><span>1か所に出す</span><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-simple-notification-service.svg" alt=""></span>
+      <span class="lbl">SNSトピック<br>（1つだけ）</span><span class="sub">フィルターで仕分け</span>
+    </div>
+    <div class="link ok"><span>種類ごとに</span><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-simple-queue-service.svg" alt=""></span>
+      <span class="lbl">SQSキュー<br>（種類の数だけ）</span><span class="sub">処理まで溜めておける</span>
+    </div>
+    <div class="link ok"><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/gen-server.svg" alt=""></span>
+      <span class="lbl">バックエンド<br>サーバー</span><span class="sub">自分の担当だけ処理</span>
+    </div>
+  </div>
+  <p class="caption">この形を<strong>ファンアウト</strong>と呼びます。入口は1つ、出口は種類の数だけ。注文の種類が増えても、<strong>入口はそのままでキューを1本足すだけ</strong>です。</p>
+
+  <p>たとえるなら、<mark>SNSは職員室からの校内放送、SQSは各クラスの連絡ボックス</mark>です。放送は1回流すだけ。ただし「これは3年生あて」という目印を付けておけば、3年生のボックスにだけ届きます。<strong>放送を聞き逃しても、ボックスに紙が残っているので大丈夫</strong>。これがSQSを挟む理由です。</p>
+
+  <h3>なぜSQSを挟むのか</h3>
+  <p>SNSだけだと、放送は<strong>流した瞬間に聞いていた人にしか届きません</strong>。サーバーが再起動中だったら、その注文は消えます。SQSを挟めば、処理されるまでメッセージが残り続けます。12時間以内でよいのだから、<strong>溜めておけることのほうが価値があります</strong>。</p>
+
+  <h2>まぎらわしい3つを区別する</h2>
+  <table>
+    <tr><th style="width:24%">名前</th><th style="width:24%">正体</th><th style="width:22%">たとえ</th><th>向いていない場面</th></tr>
+    <tr><td class="good">Amazon SNS</td><td class="good">同じ知らせを複数に配る</td><td class="good">校内放送</td><td class="good">1対多の配信。溜められないのでSQSと組む</td></tr>
+    <tr><td class="good">Amazon SQS</td><td class="good">処理されるまで溜める行列</td><td class="good">連絡ボックス</td><td class="good">あとで処理すればよい仕事に最適</td></tr>
+    <tr><td>Kinesis Data Streams</td><td>流れ続けるデータを順番に</td><td>ベルトコンベア</td><td class="bad">シャード数の設計と管理が必要。リアルタイム不要なら過剰</td></tr>
+  </table>
+  <p class="caption">見分け方は<strong>「すぐ処理する必要があるか」</strong>。<strong>秒単位・リアルタイム・順番が大事 → Kinesis。数時間以内でよい・仕事の受け渡し → SQS。</strong></p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. 注文ごとにKinesisシャードを作り、SNSでシャードに振り分ける</h3>
+      <p>Kinesis Data Streamsは、流れ続けるデータを受け止めるベルトコンベアです。シャードとはその通り道の本数で、<strong>何本必要かを自分で見積もって設定します</strong>。</p>
+      <p class="why">ヒント1のとおり12時間以内でよいので、リアルタイム向けのKinesisは過剰です。ヒント3の「運用効率」も、シャード管理のぶん悪くなります。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. 注文の種類ごとに複数のLambda関数とSNSトピックを作る</h3>
+      <p>種類ごとにトピックを作るので、<strong>注文の種類が増えるたびにトピックとLambdaを追加し、送信側のコードも直すことになります</strong>。</p>
+      <p>さらにSNSから直接Lambdaを呼ぶ形なので、メッセージを溜めておく場所がありません。処理に失敗したときの作り込みも必要です。</p>
+      <p class="why">ヒント3の「運用効率」に反します。<strong>正解はトピック1つで済むのに、こちらは種類の数だけ増えていきます。</strong></p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>C. SNSトピック1つに複数のSQSキューをつなぎ、フィルターで振り分ける</h3>
+      <p>入口はトピック1つ。フィルターが注文の種類を見て、該当するキューにだけメッセージを届けます。各キューは処理されるまでメッセージを保持します。</p>
+      <p>種類が増えたら、<strong>キューを1本足してフィルターを1行足すだけ</strong>。送信側のコードは触りません。</p>
+      <p class="why">溜められる（ヒント1）、種類で分けられる（ヒント2）、増えても手直しが小さい（ヒント3）。3つを同時に満たします。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. Kinesisシャードを作り、KCLでメッセージをプールする</h3>
+      <p>KCL（Kinesis Client Library）は、シャードからデータを読み取るためのライブラリです。どこまで読んだかの記録や、担当の割り振りを自分で組み込むことになります。</p>
+      <p class="why">Aと同じくリアルタイム向けの道具で、しかも<strong>アプリ側の作り込みがいちばん多い</strong>選択肢です。ヒント3から最も遠くなります。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：C　Amazon SNSトピックを１つ作成して、このSNSトピックに複数のAmazon SQSキューをサブスクライブする（フィルターで振り分ける）</strong></p>
+    <p class="oboe">覚え方 —— <strong>「1つの出来事を複数の宛先に配りたい」＝ SNS ＋ SQS のファンアウト。「種類ごとに振り分けたい」＝ SNSのフィルターポリシー。</strong>これが定番の形です。判断のコツは<strong>処理までに許される時間</strong>を見ること。<strong>数時間以内でよい・仕事の受け渡し → SQS。秒単位・順番が大事・大量の連続データ → Kinesis。</strong>そして<strong>「種類ごとにトピックを作る」「種類ごとに関数を作る」系の選択肢は、種類が増えるたびに作り直しになるので、運用効率を聞かれたら必ず負けます。</strong></p>
+  </div>`
+  },
+
+  {
+    id: 'e1q19',
+    q: 'ある企業は、社内のストレージをAWSにホストすることを検討しています。このストレージは、オンプレミスのアプリケーションサーバーにiSCSIデバイスを介して接続される必要があります。さらに、移行後はAWS上のストレージをプライマリーストレージとして使用する方針です。この要件を満たすための適切な設定方法はどれでしょうか。',
+    choices: [
+      'S3バケットを作成して、S3コネクターをiSCSIデバイスとして利用する',
+      'EBSを作成して、EBSコネクターをiSCSIデバイスとして利用する',
+      'Glacierを作成して、GlacierコネクターをiSCSIデバイスとして利用する',
+      'AWS Storage GatewayをISCSIデバイスとして利用する',
+    ],
+    answer: 3,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>この問題は<strong>第4問の兄弟</strong>です。同じStorage Gatewayの話ですが、条件が1つひっくり返っています。</p>
+  <table>
+    <tr><th style="width:38%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td><strong>オンプレミス</strong>のサーバーから使う</td><td>社内の機械とAWSをつなぐ中継役が要る</td></tr>
+    <tr><td><strong>iSCSI</strong>デバイスを介して接続</td><td>1本のディスクとして見せる方式。ファイル共有でもテープでもない</td></tr>
+    <tr><td>AWS上のストレージを<strong>プライマリー</strong>に</td><td><mark>データの本体はAWS側。ローカルには置ききらない</mark></td></tr>
+  </table>
+  <p class="caption">iSCSI（アイスカジー）とは、ネットワーク越しのストレージを<strong>パソコンに直接つないだディスクのように見せる</strong>約束ごとです。「iSCSI」と書いてあれば、ブロックストレージの話だと決まります。</p>
+
+  <h2>決め手は「そんな名前のサービスは存在しない」こと</h2>
+  <p>選択肢A・B・Cはどれも「◯◯コネクター」という名前です。<strong>AWSにS3コネクター、EBSコネクター、Glacierコネクターというサービスはありません。</strong>実在しない名前で作られたダミーです。</p>
+  <p>オンプレミスのサーバーからAWSのストレージをiSCSIで使う方法は、AWSには1つしかありません。それが<strong>AWS Storage Gateway</strong>です。</p>
+
+  <div class="nodes">
+    <div class="node">
+      <span class="ico"><img src="assets/icons/group-corporate-data-center.svg" alt=""></span>
+      <span class="lbl">オンプレミスの<br>アプリサーバー</span>
+    </div>
+    <div class="link"><span>iSCSI で接続</span><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/aws-storage-gateway.svg" alt=""></span>
+      <span class="lbl">Storage Gateway<br>（ボリュームゲートウェイ）</span><span class="sub">1本のディスクに見せる</span>
+    </div>
+    <div class="link ok"><span>本体を預ける</span><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+      <span class="lbl">Amazon S3</span><span class="sub">データの本体はここ</span>
+    </div>
+  </div>
+  <p class="caption">サーバーから見れば、つながっているのは<strong>ふつうのディスク1本</strong>です。その裏でAWSにデータが置かれていることを、アプリは知りません。</p>
+
+  <p>たとえるなら、<mark>Storage Gatewayは社内と倉庫をつなぐ受付カウンター</mark>です。社員は「棚から取ってきて」と頼むだけ。実際の荷物が社内にあるのか遠くの倉庫にあるのかを、社員は意識しません。</p>
+
+  <h2>第4問との違い：どちらが本体か</h2>
+  <p>第4問は「ローカルをメイン、S3をバックアップ」だったので<strong>保管型</strong>でした。今回は逆です。</p>
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">保管型（第4問の答え）</div>
+      <div class="nodes v">
+        <div class="node"><span class="lbl">オンプレのディスク</span><span class="sub">データ全部がここ</span></div>
+        <div class="link"><span>控えを送る</span><span class="l">↓</span></div>
+        <div class="node dim"><span class="lbl">S3</span><span class="sub">バックアップ</span></div>
+      </div>
+      <p class="note">「ローカルをメインに」と書いてあるときはこちら。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">キャッシュ型（今回の答え）</div>
+      <div class="nodes v">
+        <div class="node ok"><span class="lbl">オンプレのディスク</span><span class="sub">よく使う分だけ</span></div>
+        <div class="link ok"><span>本体はこちら</span><span class="l">↓</span></div>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+          <span class="lbl">S3</span><span class="sub">データ全部がここ</span>
+        </div>
+      </div>
+      <p class="note">「AWSをプライマリーに」と書いてあるときはこちら。</p>
+    </div>
+  </div>
+  <p class="caption">選択肢では起動タイプまで問われていませんが、<strong>「AWSをプライマリーストレージに」＝キャッシュ型ボリューム</strong>だと読めるようにしておきます。</p>
+
+  <h2>実在するもの・しないものを区別する</h2>
+  <p>試験には<strong>もっともらしいが存在しない名前</strong>が混ざります。見分けられれば一瞬で正解できます。</p>
+  <table>
+    <tr><th style="width:26%">選択肢の名前</th><th style="width:20%">実在するか</th><th>本当のところ</th></tr>
+    <tr><td>S3コネクター</td><td class="bad">存在しない</td><td>S3はオブジェクトの置き場。iSCSIでは直接つながらない</td></tr>
+    <tr><td>EBSコネクター</td><td class="bad">存在しない</td><td>EBSは実在するが、<strong>EC2に付けるディスク</strong>。オンプレからは使えない</td></tr>
+    <tr><td>Glacierコネクター</td><td class="bad">存在しない</td><td>Glacierは実在するが、めったに出さないものをしまう保管庫</td></tr>
+    <tr><td class="good">AWS Storage Gateway</td><td class="good">存在する</td><td class="good">オンプレとAWSストレージをつなぐ唯一の正規の道</td></tr>
+  </table>
+  <p class="caption">見分け方は<strong>「AWSのサービス名として聞いたことがあるか」</strong>。聞いたことのない名前が並んでいたら、残った1つが答えである可能性が高くなります。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. S3バケットを作り、S3コネクターをiSCSIデバイスとして利用する</h3>
+      <p>S3は<strong>ファイルを1つずつ預ける倉庫</strong>で、ディスクのように読み書きする作りにはなっていません。そして「S3コネクター」というサービスは存在しません。</p>
+      <p class="why">ヒント2の「iSCSIで1本のディスクとして見せる」を実現できません。名前の時点で成立していません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. EBSを作り、EBSコネクターをiSCSIデバイスとして利用する</h3>
+      <p>EBSはディスクなので、一見いちばん近そうに見えます。しかしEBSは<strong>AWSの中のEC2インスタンスに取り付けるためのもの</strong>で、オンプレミスのサーバーからは使えません。</p>
+      <p class="why">ヒント1の「オンプレミスから使う」を満たしません。<strong>いちばん惜しく見える選択肢</strong>なので注意します。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. Glacierを作り、GlacierコネクターをiSCSIデバイスとして利用する</h3>
+      <p>Glacierは<strong>めったに出さないものを安くしまっておく冷凍庫</strong>です。取り出しに手間と時間がかかります。</p>
+      <p class="why">ヒント3の「プライマリーストレージとして使う」＝毎日読み書きする、とは正反対の性格です。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>D. AWS Storage GatewayをiSCSIデバイスとして利用する</h3>
+      <p>オンプレミスに置いたゲートウェイが、アプリサーバーからは1本のディスクとして見えます。その裏でデータはS3に保存され、よく使う分だけ手元に残ります。</p>
+      <p class="why">オンプレから使えて（ヒント1）、iSCSIで1本のディスクに見えて（ヒント2）、本体をAWSに置ける（ヒント3）。3つすべてを満たします。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：D　AWS Storage GatewayをiSCSIデバイスとして利用する</strong></p>
+    <p class="oboe">覚え方 —— <strong>「オンプレミス」と「AWSのストレージ」が同じ問題文に出てきたら、答えはAWS Storage Gateway。</strong>ほぼこれだけで決まります。そのうえで<strong>iSCSI＝ボリュームゲートウェイ、NFS／SMB＝ファイルゲートウェイ、テープ＝テープゲートウェイ</strong>と3タイプを結び付けます。起動タイプは<strong>「AWSをプライマリーに」＝キャッシュ型、「ローカルをメインに」＝保管型</strong>（第4問を参照）。そして<strong>「◯◯コネクター」のような聞いたことのない名前は、たいてい実在しないダミー</strong>です。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q20',
+    q: 'ある企業では、EC2インスタンス上でバッチ処理ワークロードを運用しています。このワークロードは複数のAmazon EC2インスタンスを活用しており、ステートレスな特性を持っています。そのため、インスタンス処理を途中で停止したり再開したりすることが容易です。全体の処理時間は約1時間を要します。あなたはソリューションアーキテクトとして、コストの最適化を求められています。コスト最適化を実現するために、ソリューションアーキテクトはどのインスタンスタイプを選択すべきでしょうか。',
+    choices: [
+      'スポットインスタンスを利用する',
+      'リザーブドインスタンスを利用する',
+      'オンデマンドインスタンスを利用する',
+      'ベアメタルインスタンスを利用する',
+    ],
+    answer: 0,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>EC2の料金の選び方は、<strong>ワークロードの性格</strong>で決まります。問題文はその性格をていねいに書いてくれています。</p>
+  <table>
+    <tr><th style="width:38%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td><strong>ステートレス</strong>な特性</td><td>途中経過をサーバーに溜めていない。どのインスタンスが担当してもよい</td></tr>
+    <tr><td>途中で<strong>停止したり再開したり</strong>することが容易</td><td><mark>急に中断されても困らない。これが決め手</mark></td></tr>
+    <tr><td>処理時間は約1時間</td><td>ずっと動かし続けるわけではない</td></tr>
+  </table>
+  <p class="caption">「ステートレス」とは、作業の途中経過をそのサーバーの中に持たない作り方のことです。持っていないので、<strong>いつ止められても最初からやり直せます</strong>。</p>
+
+  <h2>決め手は「中断されても平気かどうか」</h2>
+  <p>スポットインスタンスは、AWSの<strong>空いているサーバーを格安で借りる</strong>仕組みです。オンデマンド料金の最大90%引きになります。ただし条件があり、<mark>AWS側でそのサーバーが必要になると、2分前の通知のあと取り上げられます</mark>。</p>
+
+  <div class="bars">
+    <div class="barrow"><div class="name">オンデマンド</div><div class="bar dark" style="width:100%">定価（いつでも使える）</div></div>
+    <div class="barrow"><div class="name">リザーブド</div><div class="bar dark" style="width:40%">最大72%引き</div></div>
+    <div class="barrow"><div class="name">スポット</div><div class="bar green" style="width:12%">最大90%引き</div></div>
+  </div>
+  <p class="caption">棒の長さが料金のイメージです。スポットが圧倒的に安いのは、<strong>中断されるという条件を引き受けているから</strong>です。</p>
+
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ 中断されると困る仕事</div>
+      <div class="nodes v">
+        <div class="node ng"><span class="lbl">途中経過をサーバーに持っている</span></div>
+        <div class="link ng"><span>取り上げられると</span><span class="l">↓</span></div>
+        <div class="node ng"><span class="lbl">作業が失われる</span><span class="sub">やり直しが効かない</span></div>
+      </div>
+      <p class="note">Webサーバーやデータベースはこちら。スポットは使えません。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ 今回のバッチ処理</div>
+      <div class="nodes v">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/res-amazon-ec2-spot-instance.svg" alt=""></span>
+          <span class="lbl">ステートレス</span><span class="sub">途中経過を持たない</span>
+        </div>
+        <div class="link ok"><span>取り上げられても</span><span class="l">↓</span></div>
+        <div class="node ok"><span class="lbl">別のインスタンスが続きをやる</span><span class="sub">困らない</span></div>
+      </div>
+      <p class="note">問題文が「停止・再開が容易」と書いているのは、この確認です。</p>
+    </div>
+  </div>
+  <p class="caption">問題文の「ステートレス」「停止・再開が容易」は、<strong>スポットインスタンスを選んでよいという許可証</strong>です。この言葉が出てきたら迷いません。</p>
+
+  <p>たとえるなら、<mark>スポットインスタンスは劇場の当日キャンセル席</mark>です。空いていれば破格で観られますが、正規の予約客が来たら席を譲ることになります。何度でも観に来られる人なら、これが一番お得です。<strong>リザーブドは年間の指定席予約</strong>で、毎回必ず来る人向け。オンデマンドは当日の正規料金です。</p>
+
+  <h2>4つの料金体系を区別する</h2>
+  <table>
+    <tr><th style="width:20%">種類</th><th style="width:20%">安さ</th><th style="width:24%">中断されるか</th><th>選ぶ場面</th></tr>
+    <tr><td class="good">スポット</td><td class="good">最大90%引き</td><td class="good">される（2分前に通知）</td><td class="good">中断されても平気な処理。バッチ・解析・レンダリング</td></tr>
+    <tr><td>リザーブド<br>／Savings Plans</td><td>最大72%引き</td><td>されない</td><td class="bad">1年・3年ずっと動かし続けるもの</td></tr>
+    <tr><td>オンデマンド</td><td>定価</td><td>されない</td><td class="bad">いつ使うか読めない。短期で中断も困る</td></tr>
+    <tr><td>ベアメタル</td><td class="bad">高い</td><td>されない</td><td class="bad">物理サーバーそのものが必要なとき。コストの話ではない</td></tr>
+  </table>
+  <p class="caption">ベアメタルだけ<strong>料金体系ではなく、インスタンスの種類</strong>です。仮想化なしの物理サーバーがほしいときに選ぶもので、安さとは無関係です。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>A. スポットインスタンスを利用する</h3>
+      <p>空いているサーバーを最大90%引きで借ります。取り上げられることがありますが、この処理はステートレスなので、別のインスタンスがやり直せば済みます。</p>
+      <p class="why">ヒント1とヒント2が「中断されても平気」と保証しているので、いちばん安いものを選べます。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. リザーブドインスタンスを利用する</h3>
+      <p>「1年間このぶんは必ず使います」と約束する代わりに安くなる仕組みです。約束した期間はずっと料金が発生します。</p>
+      <p class="why">ヒント3のとおり、この処理は1時間で終わります。<strong>使っていない時間まで払い続ける</strong>ので、コスト最適化にはなりません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. オンデマンドインスタンスを利用する</h3>
+      <p>使った分だけ定価で払う、いちばん基本の形です。中断されない安心はありますが、割引はありません。</p>
+      <p class="why">動きはしますが、<strong>中断されても平気なのに定価を払う</strong>ことになります。問題はコスト最適化を求めているので負けます。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. ベアメタルインスタンスを利用する</h3>
+      <p>これは料金の選び方ではなく、<strong>仮想化されていない物理サーバーそのものを借りる</strong>種類です。特殊なソフトウェアのライセンス条件などで必要になります。</p>
+      <p class="why">安くなるどころか高くつきます。ヒントのどれとも関係がありません。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：A　スポットインスタンスを利用する</strong></p>
+    <p class="oboe">覚え方 —— <strong>「ステートレス」「中断されても平気」「停止・再開が容易」「やり直せる」と書いてあったら、答えはスポットインスタンス（最大90%引き）。</strong>これはSAAで最も分かりやすい合図です。逆に<strong>「1年以上ずっと動かす」「常時稼働」ならリザーブドインスタンスかSavings Plans（最大72%引き）</strong>、<strong>「いつ使うか読めない」「中断が許されない短期」ならオンデマンド</strong>。<strong>ベアメタルは料金の話ではなく物理サーバーが必要なときの選択肢</strong>なので、コスト最適化の問題に出てきたら必ずダミーです。</p>
+  </div>`
+  },
+
   ],
 };

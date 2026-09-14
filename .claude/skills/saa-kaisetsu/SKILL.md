@@ -16,7 +16,29 @@ Udemyの問題＋解説を受け取り、`data/exam1.js` の `questions` 配列�
    **一度つけた `id` は変えない**（localStorage の保存キーになっている）。
 2. 下の「解説の型」に沿って `explain` を書く。
 3. 書き終わったら「セルフチェック」を全項目を確認する。
-4. ブラウザで開いて崩れがないか確認する（`python3 -m http.server 8765`）。
+4. `node --check data/exam1.js` で構文を確認する。
+5. ブラウザで開き（`python3 -m http.server 8765`）、下の一括チェックを実行する。
+
+### 一括チェック（ブラウザのコンソールで実行）
+
+アイコンのパス切れ、選択肢と丸つけの数ずれ、必須セクションの抜けをまとめて検出する。
+
+```js
+const d=document.createElement('div');d.style.cssText='position:absolute;left:-9999px';
+d.innerHTML=EXAM.questions.map(q=>q.explain).join('');document.body.appendChild(d);
+const imgs=[...d.querySelectorAll('img')];
+await Promise.all(imgs.map(i=>i.complete?null:new Promise(r=>{i.onload=i.onerror=r})));
+const r={questions:EXAM.questions.length, images:imgs.length,
+  broken:imgs.filter(i=>!i.naturalWidth).map(i=>i.getAttribute('src')),
+  missingKotae:EXAM.questions.filter(q=>!q.explain.includes('class="kotae"')).map(q=>q.id),
+  choicesMismatch:EXAM.questions.filter(q=>{const a=Array.isArray(q.answer)?q.answer:[q.answer];
+    return a.some(i=>i<0||i>=q.choices.length)}).map(q=>q.id),
+  choiceBlocks:EXAM.questions.map(q=>[q.id,(q.explain.match(/class="choice"/g)||[]).length,q.choices.length])
+    .filter(x=>x[1]!==x[2])};
+d.remove(); r
+```
+
+`broken` `missingKotae` `choicesMismatch` `choiceBlocks` が**すべて空**なら合格。
 
 ## データの形
 
