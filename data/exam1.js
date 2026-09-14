@@ -1,6 +1,7 @@
 // 演習テスト1: SAA-C03版模擬試験①
 // 問題を足すときは questions 配列に1件ずつ追加する。
-// explain は index.html の図解パーツCSS（.day / .bars / .flow / .choice / table / .kotae）が使える。
+// explain は index.html の図解パーツCSSと assets/icons/ のAWS公式アイコンが使える。
+// 図の選び方は .claude/skills/saa-kaisetsu/SKILL.md を見ること。
 const EXAM = {
   title: '演習テスト1 ／ SAA-C03版 模擬試験①',
   questions: [
@@ -81,13 +82,13 @@ const EXAM = {
 
   <h2>正解の動きを追いかける</h2>
   <div class="flow">
-    <div class="step"><div class="num">1</div><div class="ttl">EventBridge</div>
+    <div class="step"><div class="num">1</div><div class="ico"><img src="assets/icons/amazon-eventbridge.svg" alt=""></div><div class="ttl">EventBridge</div>
       <div class="sub">毎日決まった時刻に鳴る目覚まし時計。「そろそろ仕事の時間だよ」と合図を出す。</div></div>
     <div class="arrow">→</div>
-    <div class="step"><div class="num">2</div><div class="ttl">AWS Batch</div>
+    <div class="step"><div class="num">2</div><div class="ico"><img src="assets/icons/aws-batch.svg" alt=""></div><div class="ttl">AWS Batch</div>
       <div class="sub">合図を受け取る受付係。必要な台数・スペックを判断してジョブを並べる。</div></div>
     <div class="arrow">→</div>
-    <div class="step"><div class="num">3</div><div class="ttl">EC2（Windows）</div>
+    <div class="step"><div class="num">3</div><div class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></div><div class="ttl">EC2（Windows）</div>
       <div class="sub">このタイミングで起動。今までと同じWindowsの環境でバッチを実行する。</div></div>
     <div class="arrow">→</div>
     <div class="step"><div class="num">4</div><div class="ttl">終了・自動で停止</div>
@@ -141,11 +142,33 @@ const EXAM = {
 
   <h2>決め手は「連絡の待ち時間」</h2>
   <p>コンピュータどうしの連絡は、ふつうOS（基本ソフト）を経由します。EFA（イーエフエー／Elastic Fabric Adapter）は、このOSを飛ばして相手のメモリに直接データを届ける特別な回線です。</p>
-  <div class="bars">
-    <div class="barrow"><div class="name">ふつうの通信</div><div class="bar dark" style="width:100%">OSを経由して届ける（待ち時間 大）</div></div>
-    <div class="barrow"><div class="name">EFAの通信</div><div class="bar green" style="width:22%">直接届ける</div></div>
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ ふつうの通信</div>
+      <div class="nodes v">
+        <div class="node"><span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span><span class="lbl">計算機A</span></div>
+        <div class="link ng"><span class="l">↓</span></div>
+        <div class="node dim"><span class="ico"><img src="assets/icons/gen-gear.svg" alt=""></span><span class="lbl">OS（基本ソフト）</span></div>
+        <div class="link ng"><span class="l">↓</span></div>
+        <div class="node dim"><span class="ico"><img src="assets/icons/gen-internet.svg" alt=""></span><span class="lbl">ネットワーク</span></div>
+        <div class="link ng"><span class="l">↓</span></div>
+        <div class="node dim"><span class="ico"><img src="assets/icons/gen-gear.svg" alt=""></span><span class="lbl">OS（基本ソフト）</span></div>
+        <div class="link ng"><span class="l">↓</span></div>
+        <div class="node"><span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span><span class="lbl">計算機B</span></div>
+      </div>
+      <p class="note">1回の連絡ごとに、この段数を毎回通ります。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ EFAの通信</div>
+      <div class="nodes v">
+        <div class="node ok"><span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span><span class="lbl">計算機A</span></div>
+        <div class="link ok"><span>直通</span><span class="l">↓</span></div>
+        <div class="node ok"><span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span><span class="lbl">計算機B</span></div>
+      </div>
+      <p class="note">OSを飛ばして、相手のメモリへ直接届けます。</p>
+    </div>
   </div>
-  <p class="caption">棒の長さは1回あたりの待ち時間のイメージです。</p>
+  <p class="caption">図の段数がそのまま待ち時間の差です。</p>
   <p>たとえるなら、<mark>隣の席の友だちに紙を渡すのに、いちいち職員室の先生を通す</mark>のがふつうの通信。EFAは<strong>隣の席に直接手渡し</strong>です。1回の差はわずかでも、この連絡が計算中に何億回も起きるので、全体では大きな差になります。</p>
 
   <h3>登場人物を整理する</h3>
@@ -201,10 +224,10 @@ const EXAM = {
     <div class="step"><div class="num">1</div><div class="ttl">設計図を書く</div>
       <div class="sub">「計算機を何台、どの種類で、EFAを使う」と設定ファイルに書く。人間の仕事はほぼここだけ。</div></div>
     <div class="arrow">→</div>
-    <div class="step"><div class="num">2</div><div class="ttl">ParallelClusterが組み立て</div>
+    <div class="step"><div class="num">2</div><div class="ico"><img src="assets/icons/aws-parallel-cluster.svg" alt=""></div><div class="ttl">ParallelClusterが組み立て</div>
       <div class="sub">司令塔・計算機・共有の保管庫・順番管理役を、まとめて自動で用意する。</div></div>
     <div class="arrow">→</div>
-    <div class="step"><div class="num">3</div><div class="ttl">MPI ＋ EFA で計算</div>
+    <div class="step"><div class="num">3</div><div class="ico"><img src="assets/icons/elastic-fabric-adapter.svg" alt=""></div><div class="ttl">MPI ＋ EFA で計算</div>
       <div class="sub">MPIのルールで手分けし、EFAの直通回線で連絡しながら不正検出のモデルを一気に計算する。</div></div>
     <div class="arrow">→</div>
     <div class="step"><div class="num">4</div><div class="ttl">終わったら自動で縮小</div>
@@ -253,11 +276,29 @@ const EXAM = {
 
   <h2>決め手は「席の数」が足りなくなること</h2>
   <p>データベースには「同時に何人まで席に座れるか」という上限があります。Lambdaが1,000個同時に動けば、席を1,000個まとめて要求します。上限を超えた分は座れず、エラーになります。</p>
-  <div class="bars">
-    <div class="barrow"><div class="name">直接つなぐ</div><div class="bar red" style="width:100%">Lambdaの数だけ接続が増える（上限にぶつかる）</div></div>
-    <div class="barrow"><div class="name">RDS Proxy経由</div><div class="bar green" style="width:26%">少ない接続を使い回す</div></div>
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ 直接つなぐと</div>
+      <div class="nodes v">
+        <div class="node many ng"><span class="ico"><img src="assets/icons/aws-lambda.svg" alt=""></span><span class="lbl">Lambda</span><span class="sub">1,000個が同時に起動</span></div>
+        <div class="link ng"><span>接続 1,000本</span><span class="l">↓</span></div>
+        <div class="node ng"><span class="ico"><img src="assets/icons/amazon-rds.svg" alt=""></span><span class="lbl">RDS for MySQL</span><span class="sub">席が満杯 → エラー</span></div>
+      </div>
+      <p class="note">Lambdaが増えた分だけ、そのままDBの席を取りにいきます。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ RDS Proxyをはさむと</div>
+      <div class="nodes v">
+        <div class="node many"><span class="ico"><img src="assets/icons/aws-lambda.svg" alt=""></span><span class="lbl">Lambda</span><span class="sub">1,000個が同時に起動</span></div>
+        <div class="link"><span>たくさん来る</span><span class="l">↓</span></div>
+        <div class="node ok"><span class="ico"><img src="assets/icons/amazon-rds.svg" alt=""></span><span class="lbl">RDS Proxy</span><span class="sub">接続を貸し出す受付係</span></div>
+        <div class="link ok"><span>数十本だけ</span><span class="l">↓</span></div>
+        <div class="node ok"><span class="ico"><img src="assets/icons/amazon-rds.svg" alt=""></span><span class="lbl">RDS for MySQL</span><span class="sub">席に余裕あり</span></div>
+      </div>
+      <p class="note">受付係が少ない接続を順ぐりに回すので、DB側は増えません。</p>
+    </div>
   </div>
-  <p class="caption">棒の長さはDBに張られる接続の本数のイメージです。</p>
+  <p class="caption">Lambdaがいくら増えても、DBに届く接続の本数は変わらない。ここが決め手です。</p>
   <p>たとえるなら、<mark>100人の生徒が図書館に来るたびに、自分専用の机を新しく運び込む</mark>のが直接つなぐやり方。すぐ部屋がいっぱいになります。RDS Proxyは<strong>共有の机を貸し出す受付係</strong>。使い終わった人から机を返してもらい、次に来た人へ回します。机の数はずっと少なくて足ります。</p>
 
   <h3>RDS Proxyが引き受けてくれること</h3>
@@ -318,10 +359,10 @@ const EXAM = {
 
   <h2>正解の動きを追いかける</h2>
   <div class="flow">
-    <div class="step"><div class="num">1</div><div class="ttl">Lambdaが大量に起動</div>
+    <div class="step"><div class="num">1</div><div class="ico"><img src="assets/icons/aws-lambda.svg" alt=""></div><div class="ttl">Lambdaが大量に起動</div>
       <div class="sub">処理の依頼が増えると、Lambdaは何百個も同時に立ち上がる。</div></div>
     <div class="arrow">→</div>
-    <div class="step"><div class="num">2</div><div class="ttl">RDS Proxyに話しかける</div>
+    <div class="step"><div class="num">2</div><div class="ico"><img src="assets/icons/amazon-rds.svg" alt=""></div><div class="ttl">RDS Proxyに話しかける</div>
       <div class="sub">DBではなく受付係へ。接続先をProxyのアドレスに変えるだけで済む。</div></div>
     <div class="arrow">→</div>
     <div class="step"><div class="num">3</div><div class="ttl">少ない接続を使い回す</div>

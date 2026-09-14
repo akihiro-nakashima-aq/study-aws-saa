@@ -3,7 +3,8 @@
 AWS SAA-C03 の問題集アプリ。`index.html` をブラウザで開くだけで動く（ビルド不要）。
 
 - 解答結果と「自信あり」チェックは localStorage に保存
-- 解説は図解パーツ（`.day` / `.bars` / `.flow` / `.choice` / `table` / `.kotae`）を使って中学生でもわかるレベルで記述
+- 解説は図解パーツ（`.nodes` 構成図 / `.vs` 対比 / `.zone` 範囲 / `.flow` 流れ / `.day` / `.bars` / `table` / `.kotae`）で中学生でもわかるレベルに図解
+- `assets/icons/` にAWS公式アーキテクチャアイコン（SVG 359個）。一覧は `assets/icons/INDEX.txt`
 
 ## 問題の追加
 

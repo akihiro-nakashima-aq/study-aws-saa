@@ -53,8 +53,9 @@ Udemyの問題＋解説を受け取り、`data/exam1.js` の `questions` 配列�
 
 ### ② 決め手を図にする　【必須】
 
-①で `<mark>` した決め手を、**図解パーツのどれか1つ**で目に見えるようにする。
-文章の言い換えではなく、量・長さ・時間の差が一目でわかる図にすること。
+①で `<mark>` した決め手を図にする。下の**「図の選び方」の表で図の種類を決めてから**描くこと。
+文章の言い換えにしない。読まなくても違いが目に入る図にする。
+構成や経路の話なら、AWSアイコン入りの矩形と矢印（`.nodes`）で描く。
 
 そのあと必ず、**身近なたとえ**を1文入れる（例：「1日1回しか使わない教室のエアコンを24時間つけっぱなしにするのと同じ」）。
 
@@ -120,22 +121,111 @@ Udemyの問題＋解説を受け取り、`data/exam1.js` の `questions` 配列�
 - 英略語はカタカナか日本語を添える。
 - 語りかける文体（「〜します」「〜です」）で統一。突然の体言止めを混ぜない。
 
-## 使える図解パーツ
+## 図の選び方（ここが品質を決める）
 
-CSSは `index.html` に定義済み。**インラインstyleでの自作より、既存パーツを使うことを優先する。**
+**同じ図を毎回使わない。** 説明したいことの種類で図を選ぶ。
 
-| パーツ | 用途 | 骨格 |
+| 説明したいこと | 使う図 | 例 |
 |---|---|---|
-| `.day` | 1日24時間のうち動いている割合 | `.strip > span`×24（動く時間帯に `.on`）＋ `.scale` ＋ `.caption` |
-| `.bars` | 長さ・容量・時間の大小くらべ | `.barrow > .name` ＋ `.bar.dark/.red/.green`（`style="width:N%"`） |
-| `.flow` | 処理の流れ・時系列 | `.step > .num/.ttl/.sub` を `.arrow`（`→`）でつなぐ |
-| `.choice` | 選択肢の丸つけ | `.mark.o`／`.mark.x` ＋ `h3` ＋ `p` ＋ `p.why` |
-| `table` | 対応表・比較表 | `td.good`（緑・太字）／`td.bad`（赤） |
-| `.kotae` | 答えの枠 | `strong` の答え ＋ `p.oboe` の覚え方 |
-| `.caption` | 図の下の補足 | 図の直後に必ず1つ |
-| `<mark>` | 決め手のハイライト | 1セクションに1か所まで |
+| **どうつながっているか**（構成・経路・登場人物） | `.vs` ＋ `.nodes` | Lambda→Proxy→RDS、通信がOSを経由する／しない |
+| **どちらを選ぶべきか**（ダメな構成と良い構成） | `.vs`（✕こうなる／◯こうする） | 直接つなぐ vs Proxyをはさむ |
+| **何がどこに入っているか**（範囲・階層） | `.zone`（入れ子の枠） | VPC＞サブネット＞EC2、AZをまたぐ構成 |
+| **どういう順番で動くか**（時系列） | `.flow` | EventBridge→Batch→EC2→停止 |
+| **量や長さの大小**（本当に数値の比較のとき **だけ**） | `.bars` | 60分 vs 15分、10TB vs 100GB |
+| **1日・1年のうちどれだけ動くか** | `.day` | 1日1時間だけ稼働 |
+| **項目ごとの違いの一覧** | `table` | 選択肢×観点の比較 |
 
-足りないパーツが必要になったら、インラインstyleで散らかさず `index.html` の「解説の図解パーツ」ブロックにクラスを追加してこの表にも足す。
+`.bars` は<strong>数の大小そのものが論点のときだけ</strong>使う。「接続が増える」「性能が落ちる」のような**構造の話を棒グラフにしない**。構造の話は必ず矩形と矢印の図（`.nodes`）で描く。
+
+## 図解パーツの書き方
+
+### 構成図 `.nodes`（矩形＋矢印）
+
+```html
+<div class="nodes v">
+  <div class="node many ng">
+    <span class="ico"><img src="assets/icons/aws-lambda.svg" alt=""></span>
+    <span class="lbl">Lambda</span><span class="sub">1,000個が同時に起動</span>
+  </div>
+  <div class="link ng"><span>接続 1,000本</span><span class="l">↓</span></div>
+  <div class="node ng">
+    <span class="ico"><img src="assets/icons/amazon-rds.svg" alt=""></span>
+    <span class="lbl">RDS for MySQL</span><span class="sub">席が満杯 → エラー</span>
+  </div>
+</div>
+```
+
+| クラス | 意味 |
+|---|---|
+| `.nodes` / `.nodes.v` | 横並び／縦並び。3つ以上つなぐときや `.vs` の中では `v` を使う |
+| `.node.ok` / `.node.ng` / `.node.dim` | 枠を緑／赤／灰色にする |
+| `.node.many` | 同じものが何枚も重なっている表現（Lambdaが大量起動、EC2が複数台） |
+| `.link` | 矢印。`<span>ラベル</span><span class="l">↓</span>` の2行。`.ok` `.ng` で色がつく |
+| 矢印の文字 | 縦並びは `↓`、横並びは `⟶` を使う |
+
+### 対比 `.vs`（✕こうなる／◯こうする）
+
+```html
+<div class="vs">
+  <div class="pane bad">
+    <div class="pane-h">✕ 直接つなぐと</div>
+    <div class="nodes v">…</div>
+    <p class="note">この構成だと何が起きるか、1文で。</p>
+  </div>
+  <div class="pane good">
+    <div class="pane-h">◯ RDS Proxyをはさむと</div>
+    <div class="nodes v">…</div>
+    <p class="note">何が解決するか、1文で。</p>
+  </div>
+</div>
+```
+
+左右の**段数の差がそのまま説明**になるように組む（経由が多い／少ない、接続が多い／少ない）。
+
+### 範囲の枠 `.zone`（VPC・サブネット・AZ）
+
+```html
+<div class="zone">
+  <span class="zlbl"><img src="assets/icons/group-virtual-private-cloud-vpc.svg" alt="">VPC</span>
+  <div class="zone">
+    <span class="zlbl">プライベートサブネット</span>
+    <div class="zrow">
+      <div class="node">…</div>
+      <div class="node">…</div>
+    </div>
+  </div>
+</div>
+```
+
+`.zone` は入れ子にできる。外側が破線、内側が実線になる。`.zone.ok` / `.zone.ng` で色がつく。
+
+### 流れ図 `.flow`（時系列）
+
+各ステップの先頭に `<div class="ico"><img src="assets/icons/xxx.svg" alt=""></div>` を置ける。
+
+## AWSアイコンの使い方
+
+`assets/icons/` に公式のAWSアーキテクチャアイコン（SVG）が359個入っている。
+
+**探し方** — ファイル名一覧を grep する。
+
+```bash
+grep -i rds assets/icons/INDEX.txt
+grep -iE "kubernetes|container" assets/icons/INDEX.txt
+```
+
+| 種類 | 名前の形 | 例 |
+|---|---|---|
+| サービス | `<正式名を小文字ケバブ>.svg` | `aws-lambda.svg` `amazon-rds.svg` `amazon-simple-queue-service.svg` |
+| グループ枠 | `group-*.svg` | `group-virtual-private-cloud-vpc.svg` `group-auto-scaling-group.svg` |
+| 汎用 | `gen-*.svg` | `gen-server.svg` `gen-database.svg` `gen-client.svg` `gen-internet.svg` `gen-gear.svg` `gen-alert.svg` |
+
+ルール：
+
+- **必ず実在するファイル名を使う。** 書いたあと `ls assets/icons/<name>.svg` で確認する。存在しないパスは画像が出ず、図が壊れる。
+- 専用アイコンがないもの（RDS Proxyなど）は、**近いサービスのアイコン＋ラベルで区別する**。AWS公式の構成図も同じやり方をしている。
+- サービスでないもの（OS、ネットワーク、人）は `gen-*` を使う。
+- 絵文字は使わない。ページの見た目が崩れる。
 
 ## セルフチェック
 
@@ -143,6 +233,9 @@ CSSは `index.html` に定義済み。**インラインstyleでの自作より�
 
 - [ ] ①のヒント表がある。決め手に `<mark>` が1か所ある
 - [ ] 図解パーツを**2つ以上**使っている（①の表は数えない）
+- [ ] **`.bars` を構造の説明に使っていない**（数値の大小のときだけ）
+- [ ] 構成・経路の説明に矩形と矢印の図（`.nodes`）を使っている
+- [ ] 図の中のアイコンパスが全部実在する（`ls assets/icons/…` で確認した）
 - [ ] 図のすぐ下に `.caption` がある
 - [ ] 身近なたとえが**2つ以上**ある（教室、目覚まし時計、短距離ランナー…）
 - [ ] **全部の**選択肢に `.choice` がある。`.why` が全部に入っている

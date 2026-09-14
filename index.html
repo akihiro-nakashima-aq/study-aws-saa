@@ -112,11 +112,66 @@
   .kotae p{margin:0;}
   .kotae .oboe{margin-top:.6em;font-size:.93rem;color:var(--ink-soft);}
 
+  /* ---- 構成図：矩形＋矢印 ---- */
+  .nodes{display:flex;align-items:stretch;justify-content:center;gap:8px;flex-wrap:wrap;margin:1.4em 0;}
+  .node{display:flex;flex-direction:column;justify-content:center;background:#fff;
+    border:2px solid var(--ink);border-radius:4px;padding:10px 14px;min-width:104px;text-align:center;}
+  .node .ico{font-size:1.45rem;line-height:1.1;font-family:"Hiragino Mincho ProN",serif;}
+  .node .lbl{font-size:.86rem;font-weight:700;line-height:1.45;margin-top:2px;}
+  .node .sub{font-size:.75rem;color:var(--ink-soft);line-height:1.5;margin-top:1px;}
+  .node.ok{border-color:var(--ok);} .node.ok .ico{color:var(--ok);}
+  .node.ng{border-color:var(--redpen);} .node.ng .ico{color:var(--redpen);}
+  .node.dim{border-color:var(--rule);color:var(--ink-soft);}
+  /* 同じものが何枚も重なっている表現 */
+  .node.many{box-shadow:5px -5px 0 -2px #fff,5px -5px 0 0 var(--ink),10px -10px 0 -2px #fff,10px -10px 0 0 var(--ink);
+    margin:12px 12px 0 0;}
+  .node.many.ng{box-shadow:5px -5px 0 -2px #fff,5px -5px 0 0 var(--redpen),10px -10px 0 -2px #fff,10px -10px 0 0 var(--redpen);}
+  /* 矢印（ラベル付き） */
+  .link{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:68px;font-size:.74rem;color:var(--ink-soft);line-height:1.4;text-align:center;}
+  .link .l{font-size:1.5rem;line-height:1;color:var(--ink);}
+  .link.ng{color:var(--redpen);} .link.ng .l{color:var(--redpen);font-weight:700;}
+  .link.ok{color:var(--ok);} .link.ok .l{color:var(--ok);}
+  /* 縦向きの図 */
+  .nodes.v{flex-direction:column;align-items:center;}
+  .nodes.v .link{min-height:44px;}
+
+  /* ---- 対比：✕こうなる／◯こうする ---- */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:1.6em 0;}
+  .vs .pane{border:1px solid var(--rule);background:#fff;padding:14px 12px 16px;}
+  .vs .pane.bad{border-top:4px solid var(--redpen);}
+  .vs .pane.good{border-top:4px solid var(--ok);}
+  .vs .pane-h{font-size:.87rem;font-weight:700;line-height:1.5;}
+  .vs .pane.bad .pane-h{color:var(--redpen);} .vs .pane.good .pane-h{color:var(--ok);}
+  .vs .nodes{margin:.9em 0 0;gap:6px;}
+  .vs .node{min-width:84px;padding:8px 10px;}
+  .vs .link{min-width:48px;}
+  .vs .note{font-size:.8rem;color:var(--ink-soft);margin:.7em 0 0;line-height:1.6;}
+
+  /* ---- 入れ子の枠（VPC / サブネット / AZ など） ---- */
+  .zone{position:relative;border:2px dashed var(--ink-soft);border-radius:5px;padding:20px 14px 14px;margin:1.6em 0;}
+  .zone .zlbl{position:absolute;top:-.72em;left:14px;background:var(--paper);padding:0 7px;
+    font-size:.76rem;font-weight:700;color:var(--ink-soft);letter-spacing:.03em;}
+  .zone .zone{border-style:solid;border-color:var(--rule);margin:1.5em 8px .6em;background:#fff;}
+  .zone .zone .zlbl{background:#fff;}
+  .zone.ok{border-color:var(--ok);} .zone.ok > .zlbl{color:var(--ok);}
+  .zone.ng{border-color:var(--redpen);} .zone.ng > .zlbl{color:var(--redpen);}
+  .zrow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .zrow > *{flex:1;min-width:120px;}
+
+  /* ---- AWS公式アイコン（assets/icons/） ---- */
+  .node .ico img{width:40px;height:40px;display:block;margin:0 auto 3px;}
+  .flow .ico img{width:30px;height:30px;display:block;margin:0 0 5px;}
+  .zone > .zlbl img{width:17px;height:17px;margin-right:4px;vertical-align:-4px;}
+  img.ico-inline{width:20px;height:20px;vertical-align:-5px;margin:0 2px;}
+  .vs .node .ico img{width:34px;height:34px;}
+
   footer{max-width:880px;margin:0 auto;padding:18px 40px 40px;font-size:.82rem;color:var(--ink-soft);}
   @media(max-width:600px){
     .sheet{padding:28px 18px 60px;} h1{font-size:1.5rem;} footer{padding:18px 18px 40px;}
     .barrow{grid-template-columns:1fr;gap:2px;} .barrow .name{text-align:left;}
     .flow .arrow{display:none;}
+    .vs{grid-template-columns:1fr;}
   }
 </style>
 </head>
