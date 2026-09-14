@@ -7,7 +7,10 @@ AWS SAA-C03 の問題集アプリ。`index.html` をブラウザで開くだけ�
 
 ## 問題の追加
 
-`data/exam1.js` の `questions` 配列に1件追加する。
+Claude Code にUdemyの問題文・選択肢・解説を貼れば、`.claude/skills/saa-kaisetsu/` のスキルが
+決まった型（ヒント表 → 図解 → 選択肢の丸つけ → 流れ図 → 答えと覚え方）で解説を生成して追加する。
+
+手で書く場合は `data/exam1.js` の `questions` 配列に1件追加する。
 
 ```js
 {
