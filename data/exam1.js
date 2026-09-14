@@ -613,5 +613,655 @@ const EXAM = {
   </div>`
   },
 
+  {
+    id: 'e1q6',
+    q: 'ある企業は、AWSを利用してアプリケーションを運用しています。このアプリケーションのデータレイヤーにはAmazon DynamoDBテーブルを使用しています。同社ではこのアプリケーションのパフォーマンスを向上させるため、Amazon DynamoDB Accelerator（DAX）クラスターを追加したキャッシュ処理を実装しました。ソリューションアーキテクトは、このDAXクラスターが保管データを暗号化する必要があると考えていますが、現在は実施できていません。この要件を満たすソリューションはどれでしょうか。',
+    choices: [
+      '既存のDAXクラスターを停止してから既存のDAXクラスター設定を編集して、AWS KMSカスタマーマネージドキーを使用して、暗号化を有効化する',
+      'DAXクラスターを作成し直して、暗号化を有効化する',
+      '既存のDAXクラスター設定を編集して、AWS KMSカスタマーマネージドキーを使用して、保管データを暗号化する',
+      '事前にAWS KMSカスタマーマネージドキーを作成する。このAWS KMSカスタマーマネージドキーを使用して、DAXクラスターを暗号化する',
+    ],
+    answer: 1,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>選択肢はどれも「暗号化する」で終わっています。違うのは<strong>いつ・どうやって</strong>だけ。つまりこの問題は、暗号化のやり方ではなく<strong>設定を変えられるタイミング</strong>を聞いています。</p>
+  <table>
+    <tr><th style="width:36%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>DAXクラスターを追加した</td><td>クラスターは<strong>すでに作られて動いている</strong></td></tr>
+    <tr><td>保管データを暗号化する必要がある</td><td>ディスクに置かれたデータを読めなくする設定が要る</td></tr>
+    <tr><td>現在は実施できていない</td><td><mark>暗号化なしで作ってしまった。あとから有効にできるかどうかが分かれ目</mark></td></tr>
+  </table>
+
+  <h2>決め手は「暗号化を決められるのは作成時だけ」</h2>
+  <p>DAX（ダックス）はDynamoDBの前に置く<strong>おぼえのいい受付係</strong>です。一度聞かれた答えを手元に覚えておいて、次に同じ質問が来たら即答します。そのDAXの保管時の暗号化は、<mark>クラスターを作るときにしか決められません</mark>。あとから「やっぱり暗号化する」に切り替えるボタンは存在しません。</p>
+
+  <div class="nodes">
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/gen-ssl-padlock.svg" alt=""></span>
+      <span class="lbl">クラスター作成</span><span class="sub">暗号化を決められるのはここだけ</span>
+    </div>
+    <div class="link"><span class="l">⟶</span></div>
+    <div class="node dim"><span class="lbl">稼働中</span><span class="sub">設定画面に暗号化の項目がない</span></div>
+    <div class="link"><span class="l">⟶</span></div>
+    <div class="node dim"><span class="lbl">停止・再起動</span><span class="sub">止めても変えられない</span></div>
+    <div class="link"><span class="l">⟶</span></div>
+    <div class="node dim"><span class="lbl">削除</span><span class="sub">ここまで一度も変更できない</span></div>
+  </div>
+  <p class="caption">緑の箱は1つだけ。作ってしまったあとは、どのタイミングでも暗号化をあとづけできません。</p>
+
+  <p>たとえるなら、<strong>金庫つきの部屋を借りるようなもの</strong>です。金庫を入れるかどうかは<mark>契約するときに決めます</mark>。入居してから「やっぱり金庫を入れたい」と言っても、壁を壊さずに後付けはできません。引っ越すしかない、というのがDAXの暗号化です。</p>
+
+  <h2>では、どうすればいいのか</h2>
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ 既存のクラスターをいじる</div>
+      <div class="nodes v">
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/res-amazon-dynamodb-amazon-dynamodb-accelerator.svg" alt=""></span>
+          <span class="lbl">今のDAXクラスター</span><span class="sub">暗号化オフで作成済み</span>
+        </div>
+        <div class="link ng"><span>設定を編集／停止して編集</span><span class="l">↓</span></div>
+        <div class="node ng"><span class="lbl">変えられない</span><span class="sub">そういう項目が存在しない</span></div>
+      </div>
+      <p class="note">選択肢A・C・Dは、やり方は違ってもすべてこれです。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ 暗号化ありで作り直す</div>
+      <div class="nodes v">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/res-amazon-dynamodb-amazon-dynamodb-accelerator.svg" alt=""></span>
+          <span class="lbl">新しいDAXクラスター</span><span class="sub">作成時に暗号化オン</span>
+        </div>
+        <div class="link ok"><span>アプリの接続先を切り替え</span><span class="l">↓</span></div>
+        <div class="node ok"><span class="lbl">古いクラスターを削除</span></div>
+      </div>
+      <p class="note">DAXはキャッシュ（控え）なので、中身が消えても元データはDynamoDBに残っています。</p>
+    </div>
+  </div>
+  <p class="caption">作り直しても<strong>データは失われません</strong>。DAXが持っているのはDynamoDBのコピーだからです。ここが「作り直し」を選びやすい理由でもあります。</p>
+
+  <h2>あとから変えられる設定・変えられない設定</h2>
+  <p>AWSには「作成時にしか決められない設定」がいくつもあります。試験ではここが問われます。</p>
+  <table>
+    <tr><th style="width:30%">設定</th><th style="width:24%">あとから変えられるか</th><th>変えたいときの方法</th></tr>
+    <tr><td>DAXクラスターの暗号化</td><td class="bad">できない</td><td>暗号化ありで作り直す</td></tr>
+    <tr><td>RDSインスタンスの暗号化</td><td class="bad">できない</td><td>スナップショットを暗号化してコピーし、復元する</td></tr>
+    <tr><td>EBSボリュームの暗号化</td><td class="bad">できない</td><td>スナップショットを暗号化してコピーし、新しいボリュームを作る</td></tr>
+    <tr><td>EFSの暗号化</td><td class="bad">できない</td><td>暗号化ありで作り直し、データをコピーする</td></tr>
+    <tr><td class="good">S3バケットの暗号化</td><td class="good">できる</td><td class="good">バケットの設定を変えるだけ</td></tr>
+  </table>
+  <p class="caption">S3だけ感覚が違うので注意。<strong>「箱を作るときに決める」タイプが多数派</strong>と覚えておくと迷いません。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. 既存クラスターを停止してから設定を編集し、KMSキーで暗号化を有効化する</h3>
+      <p>「止めてからなら設定を変えられるはず」という発想です。EC2のインスタンスタイプ変更などは実際にそうなので、つい選びたくなります。</p>
+      <p class="why">DAXの暗号化は停止しても編集できません。ヒント3の「あとから有効にできるか」に対して、できないのが答えです。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>B. DAXクラスターを作成し直して、暗号化を有効化する</h3>
+      <p>作成時なら暗号化を選べます。DAXの中身はDynamoDBのコピーなので、作り直してもデータは失われません。アプリの接続先を新しいクラスターに向け直せば終わりです。</p>
+      <p class="why">「作成時にしか決められない」という制約に対して、正面から答えている唯一の選択肢です。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. 既存クラスターの設定を編集して、KMSキーで保管データを暗号化する</h3>
+      <p>Aから「停止する」を取り除いただけで、やろうとしていることは同じです。動いたまま設定を変えようとしています。</p>
+      <p class="why">Aと同じ理由で成立しません。既存クラスターに暗号化の設定項目そのものがありません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. 事前にKMSキーを作成し、そのキーでDAXクラスターを暗号化する</h3>
+      <p>鍵を先に用意する手順自体は正しいものです。ただしこの選択肢は<strong>既存のクラスターに対して鍵を適用する</strong>と言っています。鍵があっても、適用するタイミングがもうありません。</p>
+      <p class="why">鍵の準備は問題の本質ではありません。ヒント3の「作成済みかどうか」を見落とした選択肢です。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：B　DAXクラスターを作成し直して、暗号化を有効化する</strong></p>
+    <p class="oboe">覚え方 —— <strong>「暗号化されていない既存リソースを暗号化したい」と来たら、まず「作成時にしか決められないのでは？」と疑う。</strong>DAX・RDS・EBS・EFSは作成時のみで、答えは<strong>作り直すか、スナップショットを暗号化してコピーするか</strong>の2択になります。逆に<strong>S3はあとから変更できる</strong>数少ない例外です。選択肢に「設定を編集して有効化」が並んでいたら、それらは全部ダミーだと思って構いません。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q7',
+    q: 'あなたはソリューションアーキテクトとして、AWSを活用してEC2インスタンス上にデータベースサーバーを設定する役割を担っています。このデータベースには非常に重要な情報を保存するため、必要なパッチをダウンロードする場合を除き、インターネットから直接にデータベースサーバーに接続されないようにする必要があります。この要件を満たすためのAWSネットワーク設定はどれでしょうか。',
+    choices: [
+      'データベースをパブリックサブネット内に構築して、このプライベートサブネットのルートテーブルにインターネットゲートウェイへのルートを設定する',
+      'データベースをパブリックサブネット内に構築して、このプライベートサブネットのルートテーブルにNATゲートウェイへのルートを設定する',
+      'データベースをプライベートサブネット内に構築して、このプライベートサブネットのルートテーブルにインターネットゲートウェイへのルートを設定する',
+      'データベースをプライベートサブネット内に構築して、このプライベートサブネットのルートテーブルにNATゲートウェイへのルートを設定する',
+    ],
+    answer: 3,
+    explain: `
+  <h2>まず、問題文の中の「2つのヒント」</h2>
+  <p>選択肢は「どのサブネットに置くか」×「どこへのルートを引くか」の2×2、つまり4通りの組み合わせです。それぞれを問題文のどの言葉が決めているのかを取り出します。</p>
+  <table>
+    <tr><th style="width:40%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>インターネットから直接にデータベースサーバーに接続されないようにする</td><td>外から入ってこられない場所に置く → <strong>プライベートサブネット</strong></td></tr>
+    <tr><td>必要なパッチをダウンロードする場合を除き</td><td><mark>外に出る通信だけは必要。入る通信は要らない</mark> → 片道だけ通す仕組み</td></tr>
+  </table>
+  <p class="caption">「〜する場合を除き」という書き方に注意します。これは<strong>例外を1つだけ認めている</strong>という意味で、そこが正解を分けます。</p>
+
+  <h2>決め手は「通信の向き」</h2>
+  <p>外とつながる出口には2種類あります。名前は似ていますが、通す向きがまったく違います。</p>
+
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ インターネットゲートウェイ（IGW）</div>
+      <div class="nodes v">
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span>
+          <span class="lbl">データベース</span>
+        </div>
+        <div class="link ng"><span>行きも帰りも通る</span><span class="l">↕</span></div>
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/res-amazon-vpc-internet-gateway.svg" alt=""></span>
+          <span class="lbl">インターネットゲートウェイ</span><span class="sub">出入り自由の表玄関</span>
+        </div>
+        <div class="link ng"><span class="l">↕</span></div>
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/gen-internet.svg" alt=""></span>
+          <span class="lbl">インターネット</span><span class="sub">外から入ってこられる</span>
+        </div>
+      </div>
+      <p class="note">パッチは取れますが、外から直接つなげる状態になります。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ NATゲートウェイ</div>
+      <div class="nodes v">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span>
+          <span class="lbl">データベース</span>
+        </div>
+        <div class="link ok"><span>行きだけ通る</span><span class="l">↓</span></div>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/res-amazon-vpc-nat-gateway.svg" alt=""></span>
+          <span class="lbl">NATゲートウェイ</span><span class="sub">代わりに買い物へ行く人</span>
+        </div>
+        <div class="link ok"><span class="l">↓</span></div>
+        <div class="node">
+          <span class="ico"><img src="assets/icons/gen-internet.svg" alt=""></span>
+          <span class="lbl">インターネット</span><span class="sub">DBの居場所は見えない</span>
+        </div>
+      </div>
+      <p class="note">パッチは取れて、外から入ってくることはできません。</p>
+    </div>
+  </div>
+  <p class="caption">矢印に注目してください。<strong>IGWは両向き（↕）、NATゲートウェイは片道（↓）</strong>。この違いだけで答えが決まります。</p>
+
+  <p>たとえるなら、<mark>NATゲートウェイは「代わりに買い物に行ってくれる人」</mark>です。データベースは店に出かけません。必要なものをNATに頼み、NATが買って持ち帰ります。店から見えるのはNATだけなので、<strong>店員はデータベースの住所を知りません</strong>。一方インターネットゲートウェイは表玄関を開けっぱなしにするようなもので、こちらから出られる代わりに、誰でも訪ねてこられます。</p>
+
+  <h3>全体の形はこうなります</h3>
+  <div class="zone">
+    <span class="zlbl"><img src="assets/icons/group-virtual-private-cloud-vpc.svg" alt="">VPC（自社専用のネットワーク）</span>
+    <div class="zone">
+      <span class="zlbl"><img src="assets/icons/group-public-subnet.svg" alt="">パブリックサブネット（表通りに面した場所）</span>
+      <div class="zrow">
+        <div class="node">
+          <span class="ico"><img src="assets/icons/res-amazon-vpc-nat-gateway.svg" alt=""></span>
+          <span class="lbl">NATゲートウェイ</span><span class="sub">ここに置く</span>
+        </div>
+      </div>
+    </div>
+    <div class="zone">
+      <span class="zlbl"><img src="assets/icons/group-private-subnet.svg" alt="">プライベートサブネット（建物の奥の部屋）</span>
+      <div class="zrow">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span>
+          <span class="lbl">データベースサーバー</span><span class="sub">外から到達できない</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">NATゲートウェイ自身はパブリックサブネットに置きます。外と話せる場所にいないと、代わりに買い物に行けないからです。</p>
+
+  <h2>まぎらわしい4つを区別する</h2>
+  <p>ここが最大の落とし穴です。<strong>「パブリック」「プライベート」はサブネットの設定項目ではありません。</strong></p>
+  <table>
+    <tr><th style="width:28%">名前</th><th style="width:34%">正体</th><th>まちがえやすい点</th></tr>
+    <tr><td>パブリックサブネット</td><td>ルートテーブルに<strong>IGWへのルートがある</strong>サブネット</td><td class="bad">そういう名前の設定があるわけではない。ルートの中身で決まる</td></tr>
+    <tr><td class="good">プライベートサブネット</td><td class="good">IGWへのルートが<strong>ない</strong>サブネット</td><td class="good">NATへのルートは持てる</td></tr>
+    <tr><td>インターネットゲートウェイ</td><td>VPCと外をつなぐ出入口</td><td class="bad">これを向けた時点でパブリックサブネットになる</td></tr>
+    <tr><td>NATゲートウェイ</td><td>内から外への通信だけを代行する</td><td>自分はパブリックサブネットに置く必要がある</td></tr>
+  </table>
+  <p class="caption">つまり<strong>「プライベートサブネットにIGWへのルートを引く」と書いた瞬間、それはもうプライベートサブネットではありません。</strong>言葉として矛盾しています。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. パブリックサブネットに構築し、IGWへのルートを設定する</h3>
+      <p>データベースを表通りに面した場所に置き、玄関も開けるという構成です。パッチは取れますが、外からも直接つなげます。</p>
+      <p class="why">ヒント1の「インターネットから直接接続されないようにする」を真正面から破っています。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. パブリックサブネットに構築し、NATゲートウェイへのルートを設定する</h3>
+      <p>通信の向きは片道で正しいのですが、置き場所がパブリックサブネットのままです。パブリックサブネットにいる以上、そこには別途IGWへのルートが存在します。</p>
+      <p class="why">ヒント1の置き場所が違います。DBは奥の部屋に置かなければいけません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. プライベートサブネットに構築し、IGWへのルートを設定する</h3>
+      <p>置き場所は正しいのですが、そこに表玄関への道をつないでしまっています。上の表のとおり、<strong>IGWへのルートを引いた時点でそのサブネットはパブリックサブネットです</strong>。</p>
+      <p class="why">名前だけプライベートで中身はパブリックになり、ヒント1を満たしません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>D. プライベートサブネットに構築し、NATゲートウェイへのルートを設定する</h3>
+      <p>データベースは奥の部屋にいて、外からは到達できません。それでいてパッチを取りにいくときはNATが代わりに出向いてくれます。</p>
+      <p class="why">「入れない」と「出られる」を両立できるのはこの組み合わせだけです。2つのヒントを同時に満たします。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：D　データベースをプライベートサブネット内に構築して、このプライベートサブネットのルートテーブルにNATゲートウェイへのルートを設定する</strong></p>
+    <p class="oboe">覚え方 —— <strong>「外から入れたくない、でも外には出たい」＝ プライベートサブネット ＋ NATゲートウェイ。これがAWSの定番の形です。</strong>判断は2段階でやります。まず<strong>置き場所</strong>（外から接続されたくない → プライベート）、次に<strong>出口</strong>（外に出る必要があるか → あればNAT、なければ出口なし）。そして<strong>IGWは両向き、NATは片道</strong>。この向きの違いさえ押さえれば、VPCの問題は形が変わっても解けます。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q8',
+    q: 'ある企業では、AWSを利用して多くのウェブサイトとアプリケーションを運営しています。これらのウェブアプリケーションからは、毎日1TBを超えるクリックストリームデータが収集されており、ユーザーの行動データ解析に活用されています。現在、ソリューションアーキテクトは、これらの大量のデータを保存して、効果的に分析するためのプラットフォームを構築中です。このデータ分析のために、ソリューションアーキテクトが採用すべきアプローチは何でしょうか。',
+    choices: [
+      'AWS Data Pipelineを構成して、Amazon S3バケットにデータを保存し、そのデータをAmazon EMRクラスターで分析する',
+      'AWS Data Pipelineを構成して、Amazon S3バケットにデータを保存する。Amazon Redshift Spectrumでバケット内のデータを分析する',
+      'Amazon Kinesis Data Streamsでデータを収集して、Amazon Data Firehoseを介して、S3バケットにデータを保存する。オブジェクトがS3バケットに格納された際にS3イベント通知を実行してAWS Lambda関数を起動してデータ分析を行う',
+      'Amazon Kinesis Data Streamsでデータを収集して、Amazon Data Firehoseを介して、S3バケットにデータを保存する。Amazon Redshift Spectrumでバケット内のデータを分析する',
+    ],
+    answer: 3,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>この問題は<strong>「集める側」と「分析する側」の2つを別々に判断</strong>すると一気にほどけます。選択肢はその2つの組み合わせでできています。</p>
+  <table>
+    <tr><th style="width:36%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>クリックストリームデータ</td><td><mark>ユーザーがクリックするたびに発生する。止まらずに流れ続けるデータ</mark></td></tr>
+    <tr><td>毎日1TBを超える</td><td>とても多い。全部をデータベースに取り込むのは重すぎる</td></tr>
+    <tr><td>保存して、効果的に分析する</td><td>置き場所（保存）と分析する道具の<strong>両方</strong>が要る</td></tr>
+  </table>
+  <p class="caption">クリックストリームとは、ユーザーがサイトの中でどこをクリックしたかの記録です。人が操作するたびに1件ずつ生まれるので、水道のように<strong>流れ続けます</strong>。</p>
+
+  <h2>決め手は「まとめて運ぶか、流れてくるそばから受けるか」</h2>
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ AWS Data Pipeline（まとめて運ぶ）</div>
+      <div class="nodes v">
+        <div class="node ng"><span class="lbl">データが発生し続ける</span></div>
+        <div class="link ng"><span>次のお迎えまで待つ</span><span class="l">↓</span></div>
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/gen-gear.svg" alt=""></span>
+          <span class="lbl">決まった時刻にまとめて運搬</span><span class="sub">1日1回など</span>
+        </div>
+      </div>
+      <p class="note">1日分ためてから動くので、分析はいつも昨日の話になります。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ Kinesis Data Streams（流れを受け止める）</div>
+      <div class="nodes v">
+        <div class="node ok"><span class="lbl">データが発生し続ける</span></div>
+        <div class="link ok"><span>発生したそばから</span><span class="l">↓</span></div>
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/amazon-kinesis-data-streams.svg" alt=""></span>
+          <span class="lbl">流れてくる端から受け取る</span><span class="sub">たまらない・落とさない</span>
+        </div>
+      </div>
+      <p class="note">1日1TBが途切れず来ても、受け止め続けられます。</p>
+    </div>
+  </div>
+  <p class="caption">クリックストリームは蛇口から出続ける水です。<strong>Data Pipelineはバケツを1日1回汲みに行く人、Kinesisは蛇口にホースをつなぐ</strong>やり方。流れ続けるものには、ホースをつなぐほうが合っています。</p>
+
+  <p>もうひとつのたとえです。<mark>Data Pipelineは学校の給食の配膳</mark>で、決まった時間にまとめて運びます。Kinesisは<strong>ベルトコンベア</strong>で、乗ったものが次々に流れていきます。今回は「毎日1TBが休みなく発生する」ので、ベルトコンベアの出番です。</p>
+
+  <h3>正解の並び</h3>
+  <div class="nodes">
+    <div class="node">
+      <span class="ico"><img src="assets/icons/gen-users.svg" alt=""></span>
+      <span class="lbl">ユーザーの<br>クリック</span>
+    </div>
+    <div class="link"><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-kinesis-data-streams.svg" alt=""></span>
+      <span class="lbl">Kinesis<br>Data Streams</span><span class="sub">受け止める</span>
+    </div>
+    <div class="link"><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-data-firehose.svg" alt=""></span>
+      <span class="lbl">Data Firehose</span><span class="sub">運んで書き込む</span>
+    </div>
+    <div class="link"><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+      <span class="lbl">Amazon S3</span><span class="sub">ためる</span>
+    </div>
+    <div class="link"><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-redshift.svg" alt=""></span>
+      <span class="lbl">Redshift<br>Spectrum</span><span class="sub">そのまま分析</span>
+    </div>
+  </div>
+  <p class="caption">Redshift Spectrumは<strong>S3に置いたデータを、取り込まずにそのままSQLで分析</strong>できます。1TBを毎日どこかに引っ越しさせる必要がありません。</p>
+
+  <h2>まぎらわしい6つを区別する</h2>
+  <p>名前が似ていたり、どれも「データを扱う」ように見えたりします。担当を分けて覚えます。</p>
+  <table>
+    <tr><th style="width:26%">名前</th><th style="width:16%">担当</th><th style="width:26%">たとえ</th><th>できないこと</th></tr>
+    <tr><td class="good">Kinesis Data Streams</td><td class="good">集める</td><td class="good">ベルトコンベア</td><td class="good">流れ続けるデータを受け止める専門</td></tr>
+    <tr><td class="good">Data Firehose</td><td class="good">運ぶ</td><td class="good">宅配便</td><td class="good">受け取ったデータをS3などへ自動で届ける</td></tr>
+    <tr><td>AWS Data Pipeline</td><td>運ぶ</td><td>時間割どおりの配膳</td><td class="bad">決まった時刻に動く。流れ続けるデータ向きではない</td></tr>
+    <tr><td class="good">Redshift Spectrum</td><td class="good">分析する</td><td class="good">棚の本をその場で読む</td><td class="good">S3のデータを取り込まずSQLで分析できる</td></tr>
+    <tr><td>Amazon EMR</td><td>分析する</td><td>自分で組み立てる工場</td><td class="bad">できるが、クラスターの管理が自分に残る</td></tr>
+    <tr><td>AWS Lambda</td><td>処理する</td><td>短距離ランナー</td><td class="bad">15分まで。ファイル1個ずつの処理で、全体の集計には向かない</td></tr>
+  </table>
+  <p class="caption">「集める・運ぶ・ためる・分析する」の4役に分けると、選択肢がどこを埋めているかが見えます。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. Data PipelineでS3に保存し、EMRクラスターで分析する</h3>
+      <p>集める側がバッチ（決まった時刻にまとめて運ぶ）になっています。さらにEMRは分析用のサーバー群を自分で組んで管理する仕組みで、台数もソフトの設定も自分持ちです。</p>
+      <p class="why">ヒント1の「流れ続けるデータ」に集め方が合いません。分析側も手間が大きい選び方です。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. Data PipelineでS3に保存し、Redshift Spectrumで分析する</h3>
+      <p>分析する側は正解と同じで、ここは正しい選択です。落ちているのは集める側だけです。</p>
+      <p class="why">Aと同じくヒント1に反します。<strong>半分だけ正しい選択肢</strong>で、いちばん迷わせてきます。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. Kinesis ＋ Firehose でS3に保存し、S3イベント通知でLambdaを起動して分析する</h3>
+      <p>集める側は正解と同じです。問題は分析側で、Lambdaは<strong>ファイルが1個届くたびに、その1個を処理する</strong>仕組みです。しかも1回15分まで。</p>
+      <p class="why">ヒント3の「効果的に分析する」を満たしません。1TB全体を横断して集計することができません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>D. Kinesis ＋ Firehose でS3に保存し、Redshift Spectrumで分析する</h3>
+      <p>流れ続けるデータをKinesisが受け止め、Firehoseが自動でS3へ届け、Redshift SpectrumがS3のデータをそのままSQLで分析します。データを引っ越しさせずに済みます。</p>
+      <p class="why">集める側も分析する側も、3つのヒントすべてに合っています。</p>
+    </div>
+  </div>
+
+  <h2>「集める側」「分析する側」で並べると</h2>
+  <table>
+    <tr><th style="width:14%">選択肢</th><th style="width:30%">集める</th><th style="width:30%">分析する</th><th>判定</th></tr>
+    <tr><td>A</td><td class="bad">バッチ</td><td class="bad">EMR（管理が重い）</td><td class="bad">両方だめ</td></tr>
+    <tr><td>B</td><td class="bad">バッチ</td><td class="good">Redshift Spectrum</td><td class="bad">集め方がだめ</td></tr>
+    <tr><td>C</td><td class="good">Kinesis</td><td class="bad">Lambda（全体集計できない）</td><td class="bad">分析がだめ</td></tr>
+    <tr><td class="good">D</td><td class="good">Kinesis</td><td class="good">Redshift Spectrum</td><td class="good">両方そろう</td></tr>
+  </table>
+  <p class="caption">4択が2×2の表になっていることに気づけば、<strong>半分ずつ正しい選択肢のワナ</strong>にかかりません。</p>
+
+  <div class="kotae">
+    <p><strong>答え：D　Amazon Kinesis Data Streamsでデータを収集して、Amazon Data Firehoseを介して、S3バケットにデータを保存する。Amazon Redshift Spectrumでバケット内のデータを分析する</strong></p>
+    <p class="oboe">覚え方 —— <strong>止まらず流れ続けるデータ（クリックストリーム・IoT・ログ・動画）と来たら、集めるのはKinesis。</strong>「決まった時刻に」「1日1回」と書いてあればバッチ（Data PipelineやGlue）です。分析側は<strong>「S3に置いたままSQLで分析」＝ Redshift Spectrum か Athena</strong>。そして<strong>Lambdaは1ファイルずつの処理役であって、分析基盤ではありません。</strong>この3つの線引きで、データ分析の問題は形が変わっても切り分けられます。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q9',
+    q: 'ある企業では、AWSの東京リージョンにおいてEC2インスタンスにホストされたWEBアプリケーションを運営しています。あなたはソリューションアーキテクトとして、これらのWEBアプリケーションをシンガポールリージョンおよびシドニーリージョンに複製し、アプリケーションを拡張しようとしています。このプロセスにおいては、地理的に近いユーザーに対する最適な言語選択とルーティング制御が求められます。ユーザーに対して最適な言語選択とルーティング制御を実現するためには、どのようなソリューションが必要でしょうか。',
+    choices: [
+      'Route53において位置情報ルーティングを設定して、ユーザーの位置情報に応じた言語表示を自動で実施する',
+      'NLBを利用して全リージョンのロードバランシングを実施して、ロードバランサーのトラフィック分散地域に応じて言語表示を自動で実施する',
+      'Route53で地理的近接性ルーティングを設定して、ユーザーの位置情報に応じた言語表示を自動で実施する',
+      'ALBを利用して全リージョンのロードバランシングを実施して、ロードバランサーのトラフィック分散地域に応じて言語表示を自動で実施する',
+    ],
+    answer: 0,
+    explain: `
+  <h2>まず、問題文の中の「2つのヒント」</h2>
+  <p>選択肢はRoute 53が2つ、ロードバランサーが2つ。まず<strong>道具の種類</strong>を決めて、次に<strong>Route 53の中のどの方式か</strong>を決める、という2段階で解きます。</p>
+  <table>
+    <tr><th style="width:36%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>3つのリージョンに複製し、ルーティング制御</td><td>リージョンをまたいで振り分ける必要がある → ロードバランサーの守備範囲外</td></tr>
+    <tr><td>最適な<strong>言語</strong>選択</td><td><mark>言語は「どの国から来たか」で決まる。「どこから近いか」では決まらない</mark></td></tr>
+  </table>
+  <p class="caption">「地理的に近いユーザーに対する」という前置きがあるので、つい「近さ」で選びたくなります。でも実際に求められているのは<strong>言語の出し分け</strong>です。</p>
+
+  <h2>決め手は「国で分けるか、距離で分けるか」</h2>
+  <p>Route 53（ルートフィフティスリー）はAWSの<strong>電話帳</strong>です。「このサイトを見たい」と言われたとき、どのリージョンの住所を教えるかを決めます。その決め方にいくつも種類があり、今回はよく似た2つで迷わせてきます。</p>
+
+  <div class="vs">
+    <div class="pane good">
+      <div class="pane-h">◯ 位置情報ルーティング（国で分ける）</div>
+      <div class="nodes v">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/gen-user.svg" alt=""></span>
+          <span class="lbl">アクセスしてきた人</span>
+        </div>
+        <div class="link ok"><span>どの国から？</span><span class="l">↓</span></div>
+        <div class="node ok"><span class="lbl">日本</span></div>
+        <div class="link ok"><span class="l">↓</span></div>
+        <div class="node ok"><span class="lbl">日本語のサイトへ</span><span class="sub">国と言語が一致する</span></div>
+      </div>
+      <p class="note">国境で線を引くので、言語や法律の出し分けにそのまま使えます。</p>
+    </div>
+    <div class="pane bad">
+      <div class="pane-h">✕ 地理的近接性ルーティング（距離で分ける）</div>
+      <div class="nodes v">
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/gen-user.svg" alt=""></span>
+          <span class="lbl">アクセスしてきた人</span>
+        </div>
+        <div class="link ng"><span>どこから一番近い？</span><span class="l">↓</span></div>
+        <div class="node ng"><span class="lbl">シンガポールリージョン</span></div>
+        <div class="link ng"><span class="l">↓</span></div>
+        <div class="node ng"><span class="lbl">言語は決められない</span><span class="sub">近い国＝同じ言語とは限らない</span></div>
+      </div>
+      <p class="note">国境を無視して距離で線を引くので、言語の判断材料になりません。</p>
+    </div>
+  </div>
+  <p class="caption">どちらも「ユーザーのいる場所」を見ますが、<strong>見たあとの分け方が違います</strong>。位置情報は国名で、地理的近接性は距離で分けます。</p>
+
+  <p>たとえるなら、<mark>位置情報ルーティングは「パスポートを見て案内する係」</mark>です。日本のパスポートなら日本語の窓口へ、と迷いません。地理的近接性は<strong>「いま立っている場所から一番近い窓口を教える係」</strong>。近い窓口には案内できますが、その人が何語を話すかは分かりません。今回ほしいのはパスポートを見る係のほうです。</p>
+
+  <h2>Route 53のルーティング方式を区別する</h2>
+  <p>試験ではここが繰り返し問われます。<strong>「何を見て決めるか」</strong>の列が判断の決め手になります。</p>
+  <table>
+    <tr><th style="width:24%">方式</th><th style="width:26%">何を見て決めるか</th><th>こう書かれていたら選ぶ</th></tr>
+    <tr><td class="good">位置情報</td><td class="good">ユーザーの<strong>国・地域</strong></td><td class="good">言語を出し分けたい／国ごとに違う内容／法律で国を分ける</td></tr>
+    <tr><td>地理的近接性</td><td>ユーザーとリソースの<strong>距離</strong></td><td class="bad">特定の拠点に寄せる割合を調整したい（バイアス）</td></tr>
+    <tr><td>レイテンシー</td><td>実際の<strong>応答の速さ</strong></td><td class="bad">とにかく速く表示したい</td></tr>
+    <tr><td>加重（Weighted）</td><td>あらかじめ決めた<strong>割合</strong></td><td class="bad">新バージョンに10％だけ流したい</td></tr>
+    <tr><td>フェイルオーバー</td><td>正常かどうかの<strong>健康チェック</strong></td><td class="bad">普段はA、壊れたらBに切り替えたい</td></tr>
+  </table>
+  <p class="caption">まぎらわしいのは<strong>「近さ」で選ぶものが3つある</strong>こと。位置情報＝国、地理的近接性＝距離、レイテンシー＝速さ。<strong>言語と来たら国</strong>です。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>A. Route 53の位置情報ルーティングを設定する</h3>
+      <p>アクセス元の国を判定して、その国に対応したリージョンへ案内します。日本からなら東京、オーストラリアからならシドニー、という具合です。国が分かるので、言語の出し分けにそのまま使えます。</p>
+      <p class="why">ヒント1のリージョンまたぎの振り分けと、ヒント2の言語判定を同時に満たします。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. NLBで全リージョンのロードバランシングを実施する</h3>
+      <p>NLB（ネットワークロードバランサー）はリージョンの中で、複数のサーバーに通信を振り分ける係です。<strong>リージョンをまたいで振り分けることはできません。</strong>さらにNLBは通信の中身を見ないため、言語の判断もできません。</p>
+      <p class="why">ヒント1のリージョンまたぎに対応できません。道具の選択そのものが違います。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. Route 53の地理的近接性ルーティングを設定する</h3>
+      <p>道具はRoute 53で合っています。ただし決め方が距離なので、国境をまたいで割り振られます。シンガポールに近い国の人はシンガポール版に案内されますが、<strong>その人が何語を話すかは分かりません</strong>。</p>
+      <p class="why">ヒント2の「言語」を決められません。<strong>いちばん惜しい選択肢</strong>で、ここで迷うと落とします。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. ALBで全リージョンのロードバランシングを実施する</h3>
+      <p>ALB（アプリケーションロードバランサー）は通信の中身まで見られるので、NLBよりは器用です。それでも<strong>担当するのは1つのリージョンの中だけ</strong>という点は変わりません。</p>
+      <p class="why">Bと同じくヒント1を満たしません。中身を見られるかどうか以前に、届く範囲が足りません。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：A　Route53において位置情報ルーティングを設定して、ユーザーの位置情報に応じた言語表示を自動で実施する</strong></p>
+    <p class="oboe">覚え方 —— <strong>リージョンをまたぐ振り分けはRoute 53の仕事。ロードバランサー（ALB・NLB）はリージョンの中だけ。</strong>この線引きで選択肢は必ず半分に減ります。そのうえで<strong>「言語」「国ごとの表示」「法律で国を分ける」＝ 位置情報ルーティング</strong>、<strong>「速さ」＝ レイテンシー</strong>、<strong>「特定拠点への寄せ具合を調整」＝ 地理的近接性</strong>。<strong>言語と書いてあったら国で決める</strong>、とだけ覚えておけば十分です。</p>
+  </div>`
+  },
+
+  {
+    id: 'e1q10',
+    q: 'ある企業が、パブリックドメインの画像データを提供するアプリケーションを開発しています。このアプリケーションはAmazon EC2インスタンス上で運用されており、画像コンテンツはAmazon S3バケットの標準ストレージクラスに保存されています。S3バケットにはパブリックアクセスブロックを有効にしてバケットポリシーによる制御が設定されています。アプリケーションは、AWS外部のユーザーのリクエストに応じて特定の画像を一時的に表示する必要があり、その際には特定のユーザーに対してのみ一時的な画像の利用許可を設定することが求められます。この要件に応じて、どのようなソリューションを導入する必要がありますか。',
+    choices: [
+      'Amazon S3の期限付きの事前署名付きURLを利用して、画像コンテンツをユーザーに配信する',
+      'CloudFrontディストリビューションによって画像配信を実施することで、画像コンテンツを利用できるユーザー範囲を限定する',
+      'Amazon S3にAWS KMSの暗号化キーを適用して期限付きで、画像コンテンツを暗号化する。ユーザーは復号キーを利用して、画像にアクセスする',
+      '画像保存先をEFSによるファイル共有に切り替えることで、期限付きで画像コンテンツを共有する仕組みを構成する',
+    ],
+    answer: 0,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>条件が細かく書かれていますが、必要なものは3つだけです。この3つを同時に満たす仕組みを探します。</p>
+  <table>
+    <tr><th style="width:38%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>パブリックアクセスブロックを有効にしている</td><td>バケットは閉じたまま。<strong>公開設定にはできない</strong></td></tr>
+    <tr><td>AWS外部のユーザー</td><td>AWSのアカウントを持っていない人。IAMの権限は渡せない</td></tr>
+    <tr><td>特定のユーザーに一時的に表示</td><td><mark>渡した相手だけ、決めた時間だけ開ける仕組みが要る</mark></td></tr>
+  </table>
+  <p class="caption">「パブリックドメインの画像」とあるので公開してよさそうに見えますが、<strong>バケットは閉じたまま運用する</strong>と明記されています。ここを読み違えないようにします。</p>
+
+  <h2>決め手は「鍵つきの入場券を発行する」こと</h2>
+  <p>事前署名付きURL（じぜんしょめいつきURL）は、<strong>期限が書き込まれた特別なURL</strong>です。アプリがそのURLを作って渡すと、受け取った人はその1枚で、その画像だけを、決められた時間だけ開けます。</p>
+
+  <div class="nodes">
+    <div class="node">
+      <span class="ico"><img src="assets/icons/gen-user.svg" alt=""></span>
+      <span class="lbl">外部のユーザー</span><span class="sub">「この画像が見たい」</span>
+    </div>
+    <div class="link"><span>①たのむ</span><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span>
+      <span class="lbl">アプリ（EC2）</span><span class="sub">本人か確認して発行</span>
+    </div>
+    <div class="link ok"><span>②期限つきURLを渡す</span><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/gen-ssl-padlock.svg" alt=""></span>
+      <span class="lbl">署名付きURL</span><span class="sub">「18時まで有効」と書いてある</span>
+    </div>
+    <div class="link ok"><span>③そのURLで直接</span><span class="l">⟶</span></div>
+    <div class="node ok">
+      <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+      <span class="lbl">Amazon S3</span><span class="sub">閉じたまま。この1枚だけ通す</span>
+    </div>
+  </div>
+  <p class="caption">バケットの設定は何も変えません。<strong>扉は閉じたまま、券を持っている人だけを通します。</strong></p>
+
+  <h3>期限が切れたらどうなるか</h3>
+  <div class="day">
+    <div class="strip">
+      <span class="on"></span><span class="on"></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="scale"><span>発行</span><span>6時間後</span><span>12時間後</span><span>18時間後</span><span>24時間後</span></div>
+    <p class="caption">赤いところだけURLが使えます。時間が過ぎると、同じURLを開いてもエラーになります。<strong>こちらから取り消し作業をしなくても、勝手に無効になる</strong>のが利点です。</p>
+  </div>
+
+  <p>たとえるなら、<mark>事前署名付きURLは「時間の書かれた入場券」</mark>です。受付（アプリ）が本人を確かめて「18時まで有効」の券を渡します。券を持っている人だけが入れて、時間が過ぎれば自動で無効。<strong>建物の入口をずっと開け放つ必要はありません。</strong></p>
+
+  <h2>まぎらわしい4つを区別する</h2>
+  <p>どれも「アクセスを制限する」ように聞こえますが、守っているものが違います。</p>
+  <table>
+    <tr><th style="width:26%">名前</th><th style="width:26%">何をするもの</th><th>今回に合わない理由</th></tr>
+    <tr><td class="good">S3 事前署名付きURL</td><td class="good">期限つきで、その1つのオブジェクトだけ許可</td><td class="good">AWSの外の人にそのまま渡せる。これが答え</td></tr>
+    <tr><td>CloudFront 署名付きURL</td><td>CDN経由の配信を期限つきで許可</td><td class="bad">大量配信や地域制限が要るときの道具。今回は過剰</td></tr>
+    <tr><td>バケットポリシー</td><td>AWSアカウントやIAM単位で許可</td><td class="bad">AWSの外の一般ユーザーには渡せない</td></tr>
+    <tr><td>AWS KMS</td><td>データを暗号化して読めなくする</td><td class="bad">アクセスを許可する仕組みではない</td></tr>
+  </table>
+  <p class="caption">押さえどころは<strong>「暗号化」と「アクセス許可」は別物</strong>だということ。暗号化は中身を読めなくするだけで、誰が取りに来られるかは変えません。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>A. S3の期限付き事前署名付きURLで画像を配信する</h3>
+      <p>アプリがリクエストを受けたときにURLを1本発行し、そのユーザーに渡します。バケットは閉じたまま、渡した相手だけが、決めた時間だけアクセスできます。</p>
+      <p class="why">「閉じたまま」「AWS外部の人」「特定の相手に一時的に」の3つを同時に満たします。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. CloudFrontディストリビューションで配信し、利用できるユーザー範囲を限定する</h3>
+      <p>CloudFront（クラウドフロント）は世界中に配置された<strong>配送センター</strong>です。同じ画像を大量の人に速く届けるための仕組みで、主な目的は配信を速くすることです。</p>
+      <p>CloudFrontにも署名付きURLの仕組みはありますが、この選択肢は「ディストリビューションを作れば範囲が限定される」と言っているだけです。<strong>ディストリビューションを作っただけでは期限も相手も絞れません。</strong></p>
+      <p class="why">ヒント3の「特定の相手に一時的に」を実現する手段が書かれていません。仕組みを足さないと成立しない選択肢です。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. KMSの暗号化キーで期限付きに暗号化し、ユーザーが復号キーで取得する</h3>
+      <p>暗号化は<strong>中身を読めなくする</strong>仕組みです。取りに来ること自体を止めるものではありません。しかもこの案では、外部のユーザー一人ひとりに復号キーを配ることになります。</p>
+      <p class="why">ヒント1のとおりバケットは閉じているので、そもそも取りに来られません。さらに鍵を配る運用は、一時的な公開にはまったく向きません。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. 保存先をEFSに切り替えて、期限付きで共有する</h3>
+      <p>EFS（イーエフエス）はVPCの中のサーバーどうしで使う共有フォルダです。社内のファイルサーバーのようなもので、<strong>インターネット越しに一般ユーザーが開くための場所ではありません</strong>。</p>
+      <p class="why">ヒント2の「AWS外部のユーザー」に届きません。保存先を変える話で、要件そのものと噛み合っていません。</p>
+    </div>
+  </div>
+
+  <div class="kotae">
+    <p><strong>答え：A　Amazon S3の期限付きの事前署名付きURLを利用して、画像コンテンツをユーザーに配信する</strong></p>
+    <p class="oboe">覚え方 —— <strong>「AWSの外の人に」「一時的に」「特定のファイルだけ」と3つそろったら、S3の事前署名付きURL。</strong>バケットは閉じたままでよい、というのがこの仕組みの一番の価値です。区別のコツは2つ。<strong>CloudFrontの署名付きURLが答えになるのは、CDN経由の大量配信や地域制限が問題文に出てきたとき</strong>。そして<strong>暗号化（KMS）はアクセス制御ではありません。</strong>「誰が取りに来られるか」を聞かれているのに暗号化を選ぶと、必ず外します。</p>
+  </div>`
+  },
+
   ],
 };
