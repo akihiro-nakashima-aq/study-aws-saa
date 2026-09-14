@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS SAA 問題集</title>
+<style>
+  :root{
+    --desk:#E3E8EF; --paper:#FCFCF9; --ink:#17233D; --ink-soft:#5A6781;
+    --rule:#C9D4E2; --redpen:#D2263B; --marker:#FFE55C; --ok:#12705A;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--desk);color:var(--ink);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+    font-size:17px;line-height:1.95;}
+  .sheet{max-width:880px;margin:0 auto;background:var(--paper);
+    border-left:1px solid var(--rule);border-right:1px solid var(--rule);
+    padding:40px 40px 80px;min-height:100vh;}
+  h1,h2,h3{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-weight:600;line-height:1.5;letter-spacing:.01em;}
+  h1{font-size:1.9rem;margin:0 0 .4em;}
+  h2{font-size:1.45rem;margin:3em 0 .9em;padding-bottom:.35em;border-bottom:2px solid var(--ink);}
+  h3{font-size:1.12rem;margin:2em 0 .5em;}
+  p{margin:0 0 1.2em;max-width:64ch;}
+  .lede{color:var(--ink-soft);font-size:1.02rem;max-width:60ch;}
+  mark{background:var(--marker);padding:0 .15em;}
+  a{color:var(--ink);}
+  button{font:inherit;cursor:pointer;}
+
+  /* ---- ナビ ---- */
+  .topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding-bottom:14px;border-bottom:1px solid var(--rule);margin-bottom:28px;}
+  .topbar .spacer{flex:1;}
+  .btn{background:#fff;border:1px solid var(--rule);border-radius:3px;padding:6px 14px;font-size:.9rem;color:var(--ink);}
+  .btn:hover{border-color:var(--ink);}
+  .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .btn:disabled{opacity:.35;cursor:default;}
+
+  /* ---- 一覧 ---- */
+  .progress{display:flex;gap:22px;flex-wrap:wrap;font-size:.9rem;color:var(--ink-soft);margin:0 0 1.6em;}
+  .progress b{color:var(--ink);font-size:1.25rem;font-family:"Hiragino Mincho ProN",serif;}
+  .qlist{list-style:none;padding:0;margin:0;}
+  .qlist li{display:flex;align-items:flex-start;gap:12px;padding:12px 4px;border-bottom:1px solid var(--rule);}
+  .qlist .no{font-family:"Hiragino Mincho ProN",serif;font-size:.95rem;color:var(--ink-soft);min-width:2.6em;padding-top:.15em;}
+  .qlist .ttl{flex:1;text-align:left;background:none;border:0;padding:0;
+    font-size:.97rem;line-height:1.6;color:var(--ink);text-decoration:underline;text-decoration-color:var(--rule);}
+  .qlist .ttl:hover{text-decoration-color:var(--ink);}
+  .qlist .state{min-width:1.6em;text-align:center;font-size:1.05rem;padding-top:.1em;}
+  .qlist .state.o{color:var(--ok);} .qlist .state.x{color:var(--redpen);}
+  .conf{display:flex;align-items:center;gap:5px;font-size:.8rem;color:var(--ink-soft);white-space:nowrap;padding-top:.2em;}
+  .conf input{width:17px;height:17px;accent-color:var(--ok);cursor:pointer;}
+
+  /* ---- 出題 ---- */
+  .qbox{margin:1.6em 0 2em;padding:22px 26px;background:#F1F4F8;border-left:5px solid var(--ink);}
+  .qbox p{margin:0;font-size:1rem;}
+  .picks{list-style:none;padding:0;margin:0 0 1.8em;}
+  .picks li{margin-bottom:10px;}
+  .pick{display:flex;gap:12px;width:100%;text-align:left;align-items:flex-start;
+    background:#fff;border:1px solid var(--rule);border-radius:3px;padding:13px 16px;
+    font-size:.95rem;line-height:1.7;color:var(--ink);}
+  .pick:hover{border-color:var(--ink);}
+  .pick .key{font-family:"Hiragino Mincho ProN",serif;font-weight:600;color:var(--ink-soft);min-width:1.4em;}
+  .pick[aria-pressed="true"]{border-color:var(--ink);background:#F1F4F8;}
+  .pick[aria-pressed="true"] .key{color:var(--ink);}
+  .graded .pick{cursor:default;}
+  .graded .pick.right{border-color:var(--ok);background:#F0F7F4;}
+  .graded .pick.wrong{border-color:var(--redpen);background:#FCF1F2;}
+  .graded .pick.right .key::after{content:" ◯";color:var(--ok);}
+  .graded .pick.wrong .key::after{content:" ✕";color:var(--redpen);}
+  .verdict{margin:0 0 1.2em;padding:14px 20px;border:1px solid var(--rule);background:#fff;font-size:1rem;}
+  .verdict.o{border-left:5px solid var(--ok);} .verdict.x{border-left:5px solid var(--redpen);}
+  .hint{font-size:.85rem;color:var(--ink-soft);margin:-.6em 0 1.2em;}
+
+  /* ================= 解説の図解パーツ ================= */
+  /* 1日の帯 */
+  .day{margin:1.6em 0 .4em;}
+  .strip{display:flex;gap:2px;height:56px;}
+  .strip span{flex:1;background:#DCE2EA;border-radius:1px;}
+  .strip span.on{background:var(--redpen);}
+  .scale{display:flex;justify-content:space-between;font-size:.8rem;color:var(--ink-soft);margin-top:6px;}
+  .caption{font-size:.88rem;color:var(--ink-soft);margin-top:.2em;}
+  /* 長さくらべの棒 */
+  .bars{margin:1.5em 0;}
+  .barrow{display:grid;grid-template-columns:9.5em 1fr;gap:12px;align-items:center;margin-bottom:12px;}
+  .barrow .name{font-size:.9rem;text-align:right;}
+  .bar{height:34px;display:flex;align-items:center;padding-left:10px;color:#fff;font-size:.85rem;white-space:nowrap;}
+  .bar.dark{background:var(--ink);} .bar.red{background:var(--redpen);} .bar.green{background:var(--ok);}
+  /* 選択肢の丸つけ */
+  .choice{display:grid;grid-template-columns:2.2em 1fr;gap:14px;margin:1.8em 0;
+    padding-bottom:1.4em;border-bottom:1px dashed var(--rule);}
+  .choice .mark{font-size:1.5rem;line-height:1.2;font-weight:700;}
+  .choice .mark.o{color:var(--ok);} .choice .mark.x{color:var(--redpen);}
+  .choice h3{margin:0 0 .4em;}
+  .choice p{margin:0 0 .6em;}
+  .why{font-size:.9rem;color:var(--ink-soft);}
+  /* 流れ図 */
+  .flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:1.6em 0;}
+  .flow .step{flex:1;min-width:150px;background:#fff;border:1px solid var(--rule);padding:14px 16px;}
+  .flow .num{font-family:"Hiragino Mincho ProN",serif;color:var(--redpen);font-size:.85rem;}
+  .flow .ttl{font-weight:700;font-size:.95rem;margin:.1em 0 .3em;}
+  .flow .sub{font-size:.85rem;color:var(--ink-soft);line-height:1.7;}
+  .flow .arrow{align-self:center;color:var(--ink-soft);}
+  /* 表 */
+  .sheet table{border-collapse:collapse;width:100%;margin:1.4em 0;font-size:.92rem;}
+  .sheet th,.sheet td{border:1px solid var(--rule);padding:9px 12px;text-align:left;vertical-align:top;line-height:1.7;}
+  .sheet th{background:#EDF1F6;font-weight:600;}
+  .sheet td.good{color:var(--ok);font-weight:700;}
+  .sheet td.bad{color:var(--redpen);}
+  /* 答えの枠 */
+  .kotae{margin:2.6em 0 1em;padding:20px 24px;border:3px double var(--ink);background:#fff;}
+  .kotae strong{font-size:1.12rem;}
+  .kotae p{margin:0;}
+  .kotae .oboe{margin-top:.6em;font-size:.93rem;color:var(--ink-soft);}
+
+  footer{max-width:880px;margin:0 auto;padding:18px 40px 40px;font-size:.82rem;color:var(--ink-soft);}
+  @media(max-width:600px){
+    .sheet{padding:28px 18px 60px;} h1{font-size:1.5rem;} footer{padding:18px 18px 40px;}
+    .barrow{grid-template-columns:1fr;gap:2px;} .barrow .name{text-align:left;}
+    .flow .arrow{display:none;}
+  }
+</style>
+</head>
+<body>
+<main class="sheet" id="app"></main>
+<footer>AWS認定ソリューションアーキテクト アソシエイト 問題集 ／ 中島成博</footer>
+
+<script src="data/exam1.js"></script>
+<script>
+const app = document.getElementById('app');
+const KEY = 'saa-study';
+const store = JSON.parse(localStorage.getItem(KEY) || '{}');
+const save = () => localStorage.setItem(KEY, JSON.stringify(store));
+const rec = id => (store[id] ||= {});          // {confident:bool, result:'o'|'x'}
+const KEYS = 'ABCDEFGH';
+const asArr = a => Array.isArray(a) ? a : [a];
+
+// 採点：選んだ集合と正解の集合が完全一致で正解
+function isCorrect(picked, answer){
+  const a = asArr(answer);
+  return picked.length === a.length && a.every(i => picked.includes(i));
+}
+console.assert(isCorrect([1], 1), 'single ok');
+console.assert(!isCorrect([1], 0), 'single ng');
+console.assert(isCorrect([2,0], [0,2]), 'multi 順不同');
+console.assert(!isCorrect([0], [0,2]), 'multi 不足');
+console.assert(!isCorrect([0,1,2], [0,2]), 'multi 過剰');
+
+/* ---------- 一覧 ---------- */
+function renderList(){
+  location.hash = '';
+  const qs = EXAM.questions;
+  const done = qs.filter(q => rec(q.id).result).length;
+  const okN  = qs.filter(q => rec(q.id).result === 'o').length;
+  const conf = qs.filter(q => rec(q.id).confident).length;
+
+  app.innerHTML = `
+    <h1>${EXAM.title}</h1>
+    <p class="lede">解いて、図で確かめて、わかったらチェックを入れる。全${qs.length}問。</p>
+    <div class="progress">
+      <span>解いた <b>${done}</b> / ${qs.length}</span>
+      <span>正解 <b>${okN}</b></span>
+      <span>自信あり <b>${conf}</b></span>
+    </div>
+    <ul class="qlist">${qs.map((q,i) => {
+      const r = rec(q.id);
+      return `<li>
+        <span class="no">${String(i+1).padStart(2,'0')}</span>
+        <button class="ttl" data-open="${i}">${esc(q.q)}</button>
+        <span class="state ${r.result||''}">${r.result === 'o' ? '◯' : r.result === 'x' ? '✕' : ''}</span>
+        <label class="conf"><input type="checkbox" data-conf="${q.id}" ${r.confident?'checked':''}>自信あり</label>
+      </li>`;
+    }).join('')}</ul>
+    <p style="margin-top:2.4em"><button class="btn" id="reset">記録をリセット</button></p>`;
+
+  app.querySelectorAll('[data-open]').forEach(b =>
+    b.onclick = () => renderQuestion(+b.dataset.open));
+  app.querySelectorAll('[data-conf]').forEach(c =>
+    c.onchange = () => { rec(c.dataset.conf).confident = c.checked; save(); renderList(); });
+  app.querySelector('#reset').onclick = () => {
+    if (!confirm('解答結果と自信チェックを全部消します。よろしいですか？')) return;
+    Object.keys(store).forEach(k => delete store[k]); save(); renderList();
+  };
+}
+
+/* ---------- 出題 ---------- */
+function renderQuestion(idx){
+  const q = EXAM.questions[idx];
+  const r = rec(q.id);
+  const multi = Array.isArray(q.answer);
+  let picked = [];
+  let graded = false;
+
+  function draw(){
+    app.innerHTML = `
+      <div class="topbar">
+        <button class="btn" id="back">← 一覧へ</button>
+        <span class="spacer"></span>
+        <button class="btn" id="prev" ${idx===0?'disabled':''}>前の問題</button>
+        <button class="btn" id="next" ${idx===EXAM.questions.length-1?'disabled':''}>次の問題</button>
+      </div>
+      <h1>第${idx+1}問</h1>
+      <div class="qbox"><p>${esc(q.q)}</p></div>
+      ${multi ? `<p class="hint">${asArr(q.answer).length}つ選んでください。</p>` : ''}
+      <ul class="picks ${graded?'graded':''}">${q.choices.map((c,i) => {
+        const cls = graded ? (asArr(q.answer).includes(i) ? 'right' : picked.includes(i) ? 'wrong' : '') : '';
+        return `<li><button class="pick ${cls}" data-i="${i}" aria-pressed="${picked.includes(i)}">
+          <span class="key">${KEYS[i]}</span><span>${esc(c)}</span></button></li>`;
+      }).join('')}</ul>
+      ${graded ? verdictHtml() : `<p><button class="btn primary" id="grade" ${picked.length?'':'disabled'}>答え合わせ</button></p>`}`;
+
+    app.querySelector('#back').onclick = renderList;
+    app.querySelector('#prev').onclick = () => renderQuestion(idx-1);
+    app.querySelector('#next').onclick = () => renderQuestion(idx+1);
+    if (!graded){
+      app.querySelectorAll('.pick').forEach(b => b.onclick = () => {
+        const i = +b.dataset.i;
+        picked = multi ? (picked.includes(i) ? picked.filter(x=>x!==i) : [...picked, i]) : [i];
+        draw();
+      });
+      app.querySelector('#grade').onclick = () => {
+        graded = true;
+        r.result = isCorrect(picked, q.answer) ? 'o' : 'x';
+        save(); draw();
+      };
+    } else {
+      const cb = app.querySelector('[data-conf]');
+      cb.onchange = () => { r.confident = cb.checked; save(); };
+      app.querySelector('#retry').onclick = () => { picked=[]; graded=false; draw(); };
+    }
+  }
+
+  function verdictHtml(){
+    const ok = r.result === 'o';
+    return `
+      <div class="verdict ${r.result}">
+        <strong>${ok ? '◯ 正解' : '✕ 不正解'}</strong>　正解は
+        ${asArr(q.answer).map(i => KEYS[i]).join('・')}
+      </div>
+      <p><label class="conf" style="font-size:.95rem">
+        <input type="checkbox" data-conf="${q.id}" ${r.confident?'checked':''}>この問題は自信あり
+      </label>　<button class="btn" id="retry">もう一度解く</button></p>
+      <section class="explain">${q.explain}</section>`;
+  }
+  draw();
+  scrollTo(0,0);
+}
+
+function esc(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+renderList();
+</script>
+</body>
+</html>
