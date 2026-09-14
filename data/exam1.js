@@ -39,6 +39,17 @@ const EXAM = {
   </div>
   <p>ここが一番大事なポイントです。24時間ずっとサーバーを起動しておくのは、<mark>1日1回しか使わない教室のエアコンを24時間つけっぱなしにする</mark>のと同じ。お金も手間ももったいない。だから「必要なときだけ動いて、終わったら勝手に片づく」仕組みを選びます。</p>
 
+  <h2>まぎらわしい4つを区別する</h2>
+  <p>選択肢に出てくる名前は、どれも「処理を動かす」ように聞こえます。役割をはっきり分けておくと迷いません。</p>
+  <table>
+    <tr><th style="width:22%">名前</th><th style="width:30%">役割（たとえ）</th><th>できないこと</th></tr>
+    <tr><td>Amazon EventBridge</td><td>決まった時刻に鳴る目覚まし時計</td><td>自分では処理しない。合図を出すだけ</td></tr>
+    <tr><td class="good">AWS Batch</td><td class="good">必要なときだけ作業員を呼ぶ派遣センター</td><td>ミリ秒で即答するような用途には向かない</td></tr>
+    <tr><td>AWS Lambda</td><td>短距離ランナー</td><td class="bad">15分を超える処理。Windowsのプログラムをそのまま動かすこと</td></tr>
+    <tr><td>AWS Step Functions</td><td>合唱コンクールの指揮者</td><td class="bad">自分では歌わない。実行する場所が別に要る</td></tr>
+  </table>
+  <p class="caption">EventBridgeとStep Functionsは<strong>どちらも「自分では処理しない」</strong>のが共通点。処理する場所（Lambda・Batch・EC2）と必ずセットで考えます。</p>
+
   <h2>選択肢を1つずつ丸つけする</h2>
   <div class="choice">
     <div class="mark o">◯</div>
@@ -171,7 +182,8 @@ const EXAM = {
   <p class="caption">図の段数がそのまま待ち時間の差です。</p>
   <p>たとえるなら、<mark>隣の席の友だちに紙を渡すのに、いちいち職員室の先生を通す</mark>のがふつうの通信。EFAは<strong>隣の席に直接手渡し</strong>です。1回の差はわずかでも、この連絡が計算中に何億回も起きるので、全体では大きな差になります。</p>
 
-  <h3>登場人物を整理する</h3>
+  <h2>まぎらわしい3つの名前を整理する</h2>
+  <p>正解の選択肢には知らない名前が3つ並んでいます。それぞれ担当がまったく違います。</p>
   <table>
     <tr><th style="width:30%">名前</th><th>役割（たとえ）</th></tr>
     <tr><td>MPI（エムピーアイ）</td><td>手分けのルールブック。「誰が何を計算して、結果を誰に渡すか」を決める共通の言葉</td></tr>
@@ -219,21 +231,6 @@ const EXAM = {
     </div>
   </div>
 
-  <h2>正解の動きを追いかける</h2>
-  <div class="flow">
-    <div class="step"><div class="num">1</div><div class="ttl">設計図を書く</div>
-      <div class="sub">「計算機を何台、どの種類で、EFAを使う」と設定ファイルに書く。人間の仕事はほぼここだけ。</div></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="num">2</div><div class="ico"><img src="assets/icons/aws-parallel-cluster.svg" alt=""></div><div class="ttl">ParallelClusterが組み立て</div>
-      <div class="sub">司令塔・計算機・共有の保管庫・順番管理役を、まとめて自動で用意する。</div></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="num">3</div><div class="ico"><img src="assets/icons/elastic-fabric-adapter.svg" alt=""></div><div class="ttl">MPI ＋ EFA で計算</div>
-      <div class="sub">MPIのルールで手分けし、EFAの直通回線で連絡しながら不正検出のモデルを一気に計算する。</div></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="num">4</div><div class="ttl">終わったら自動で縮小</div>
-      <div class="sub">計算機は使った分だけで片づけられる。次に必要になったらまた自動で増える。</div></div>
-  </div>
-  <p class="caption">人間がやることは、設計図を1回書くだけ。台数を増やしたいときも、その1行を変えるだけで済みます。</p>
 
   <h2>「連絡の速さ」で並べると</h2>
   <table>
@@ -357,21 +354,6 @@ const EXAM = {
     <tr><td>RDS Proxy（B）</td><td>何本つなぐか（接続の数と使い回し）</td><td class="good">これが論点</td></tr>
   </table>
 
-  <h2>正解の動きを追いかける</h2>
-  <div class="flow">
-    <div class="step"><div class="num">1</div><div class="ico"><img src="assets/icons/aws-lambda.svg" alt=""></div><div class="ttl">Lambdaが大量に起動</div>
-      <div class="sub">処理の依頼が増えると、Lambdaは何百個も同時に立ち上がる。</div></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="num">2</div><div class="ico"><img src="assets/icons/amazon-rds.svg" alt=""></div><div class="ttl">RDS Proxyに話しかける</div>
-      <div class="sub">DBではなく受付係へ。接続先をProxyのアドレスに変えるだけで済む。</div></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="num">3</div><div class="ttl">少ない接続を使い回す</div>
-      <div class="sub">Proxyが手持ちの接続を順ぐりに貸し出す。DB側の席は増えない。</div></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="num">4</div><div class="ttl">終わった接続は返却</div>
-      <div class="sub">Lambdaが消えても接続は残り、次のLambdaがそのまま使う。準備の時間もゼロ。</div></div>
-  </div>
-  <p class="caption">人間がやることは、Proxyを1つ作って接続先の名前を書き換えるだけ。あとの調整はAWSが引き受けます。</p>
 
   <div class="kotae">
     <p><strong>答え：B　RDS Proxyを構成して、Amazon RDS DBインスタンスへの接続にRDS Proxyを使用する</strong></p>
@@ -487,21 +469,6 @@ const EXAM = {
     </div>
   </div>
 
-  <h2>正解の動きを追いかける</h2>
-  <div class="flow">
-    <div class="step"><div class="ico"><img src="assets/icons/aws-storage-gateway.svg" alt=""></div><div class="num">1</div><div class="ttl">ゲートウェイを設置</div>
-      <div class="sub">オンプレ側に保管型のボリュームゲートウェイを置く。サーバーからは今までどおり1本のディスクに見える。</div></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="ico"><img src="assets/icons/gen-disk.svg" alt=""></div><div class="num">2</div><div class="ttl">読み書きは手元で完結</div>
-      <div class="sub">3TBのデータは全部ローカルにある。印刷ファイルを開く速さは今までと変わらない。</div></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></div><div class="num">3</div><div class="ttl">S3へ自動でバックアップ</div>
-      <div class="sub">決めたスケジュールで、変わった分だけがスナップショットとしてS3へ送られる。</div></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="ico"><img src="assets/icons/gen-recover.svg" alt=""></div><div class="num">4</div><div class="ttl">壊れても戻せる</div>
-      <div class="sub">ローカルのディスクが故障しても、S3のスナップショットから復元できる。年500GBの増加分も自動でバックアップされ続ける。</div></div>
-  </div>
-  <p class="caption">人間がやることは、ゲートウェイを1回置いてスナップショットの時刻を決めるだけ。以降のバックアップは自動です。</p>
 
   <div class="kotae">
     <p><strong>答え：B　Amazon S3への移転スケジュールが設定されたスナップショットを利用する保管型ボリュームをAWS上に構成して、保管ボリュームをオンプレミス環境に設定する</strong></p>
