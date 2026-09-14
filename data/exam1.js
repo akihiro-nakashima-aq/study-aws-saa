@@ -379,5 +379,135 @@ const EXAM = {
   </div>`
   },
 
+  {
+    id: 'e1q4',
+    q: 'ある企業は、3TBのボリュームデータをオンプレミスのリポジトリに保有し、大量の印刷ファイルを保存しています。このリポジトリは年間500GBの容量が増加しているものの、ローカル環境の制約により、単一の論理ボリュームとして運用する必要があります。あなたはソリューションアーキテクトとして、ローカルストレージの制約を回避するために、このリポジトリをAmazon S3バケットに拡張することが求められています。その際、ローカルストレージをメインストレージとして利用して、S3バケットをバックアップとして利用します。この要件を満たすために、AWS Storage Gatewayの構成をどのように設定すればよいでしょうか。',
+    choices: [
+      'Amazon S3への移転スケジュールが設定されたスナップショットを利用するキャッシュ型ボリュームをAWS上に構成して、キャッシュを取得する仕組みをオンプレミス環境に設定する',
+      'Amazon S3への移転スケジュールが設定されたスナップショットを利用する保管型ボリュームをAWS上に構成して、保管ボリュームをオンプレミス環境に設定する',
+      'Amazon S3 Glacier（迅速アクセス）への移転スケジュールが設定されたスナップショットを利用するキャッシュ型ボリュームをAWS上に構成して、スナップショットをAWSの別リージョンに保管する',
+      'Amazon S3への移転スケジュールが設定されたスナップショットを利用する仮想テープライブラリーをAWS上に構成して、仮想テープをAmazon S3バケットに保存する',
+    ],
+    answer: 1,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>この問題文には<strong>わざと迷わせる書き方</strong>が仕込まれています。前半だけ読むと間違った選択肢に行き着くので、最後まで読んでから判断します。</p>
+  <table>
+    <tr><th style="width:36%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>単一の論理ボリュームとして運用</td><td>ファイル共有でもテープでもなく、<strong>1本のディスク</strong>として見えるものが必要</td></tr>
+    <tr><td>ローカルストレージの制約を回避するためにS3に拡張</td><td>ここだけ読むと「S3を本体にする」ように見える。<strong>これがワナ</strong></td></tr>
+    <tr><td>ローカルをメインストレージ、S3をバックアップ</td><td><mark>データの本体はオンプレミスに置く。S3は控えのコピー置き場</mark></td></tr>
+  </table>
+  <p class="caption">3行目が最後に出てきて、2行目をひっくり返します。矛盾しているように見えたら、<strong>あとに書かれたほうが本当の要件</strong>です。</p>
+
+  <h2>決め手は「データの本体がどこにあるか」</h2>
+  <p>AWS Storage Gateway（ストレージゲートウェイ）は、オンプレミスのサーバーとAWSのストレージをつなぐ<strong>中継役</strong>です。ボリューム（1本のディスクとして見えるもの）を扱うときは2種類から選びます。ここが今回の分かれ目です。</p>
+
+  <div class="vs">
+    <div class="pane good">
+      <div class="pane-h">保管型（Stored）＝ 本体はローカル</div>
+      <div class="nodes v">
+        <div class="node ok">
+          <span class="ico"><img src="assets/icons/gen-disk.svg" alt=""></span>
+          <span class="lbl">オンプレのディスク</span><span class="sub">3TB 全部がここにある</span>
+        </div>
+        <div class="link ok"><span>定期的にコピーを送る</span><span class="l">↓</span></div>
+        <div class="node">
+          <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+          <span class="lbl">Amazon S3</span><span class="sub">スナップショット（控え）</span>
+        </div>
+      </div>
+      <p class="note">読み書きは全部手元で完結。S3が止まっても業務は続きます。</p>
+    </div>
+    <div class="pane bad">
+      <div class="pane-h">キャッシュ型（Cached）＝ 本体はS3</div>
+      <div class="nodes v">
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/gen-disk.svg" alt=""></span>
+          <span class="lbl">オンプレのディスク</span><span class="sub">よく使う分だけ置く</span>
+        </div>
+        <div class="link ng"><span>手元にない分は取り寄せ</span><span class="l">↑</span></div>
+        <div class="node ng">
+          <span class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></span>
+          <span class="lbl">Amazon S3</span><span class="sub">3TB の本体がここ</span>
+        </div>
+      </div>
+      <p class="note">手元の容量は節約できますが、本体はAWS側です。</p>
+    </div>
+  </div>
+  <p class="caption">矢印の向きに注目してください。<strong>保管型は下向き（ローカル→S3にコピーを送る）、キャッシュ型は上向き（S3から取り寄せる）</strong>。これがそのまま「どちらが本体か」を表しています。</p>
+
+  <p>たとえるなら、<mark>保管型は教科書を全部自分の本棚に置いて、コピーを実家に送って預けておく</mark>やり方。いつでも手元からすぐ開けます。キャッシュ型は<strong>本体を図書館に預けて、手元にはよく読むページだけ置く</strong>やり方。手元にないページは、そのつど取り寄せることになります。</p>
+
+  <h3>Storage Gatewayの3つのタイプ</h3>
+  <p>選択肢に出てくる用語を整理します。何を置き換えたいのかで選ぶものが決まります。</p>
+  <table>
+    <tr><th style="width:26%">タイプ</th><th style="width:34%">オンプレからどう見えるか</th><th>使いどころ</th></tr>
+    <tr><td>ファイルゲートウェイ</td><td>共有フォルダ（NFS／SMB）</td><td>みんなでファイルを置き場に共有したいとき</td></tr>
+    <tr><td class="good">ボリュームゲートウェイ</td><td class="good">1本のディスク（iSCSI）</td><td class="good">今回。「単一の論理ボリューム」がこれ</td></tr>
+    <tr><td>テープゲートウェイ（仮想テープライブラリ）</td><td>テープの棚</td><td>今あるテープバックアップの置き換え</td></tr>
+  </table>
+  <p class="caption">「単一の論理ボリュームとして運用する」と書かれている時点で、ボリュームゲートウェイに決まります。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. キャッシュ型ボリュームを構成し、キャッシュを取得する仕組みをオンプレに置く</h3>
+      <p>タイプ（ボリューム）は合っています。ただしキャッシュ型は、データの本体をS3に置いて、手元にはよく使う分だけを残すやり方です。</p>
+      <p class="why">ヒント3の「ローカルをメインストレージにする」と本体の置き場所が逆です。問題文の前半だけを読むとこれを選んでしまいます。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>B. 保管型ボリュームを構成し、保管ボリュームをオンプレに置く</h3>
+      <p>3TBのデータは今までどおり手元のディスクに全部あり、その控えがスナップショットとして定期的にS3へ送られます。読み書きの速さは変わらず、S3はバックアップに徹します。</p>
+      <p class="why">1本のディスクとして使えて、本体はローカル、S3はバックアップ。3つのヒントを全部満たします。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. キャッシュ型＋S3 Glacier（迅速アクセス）＋スナップショットを別リージョンに保管</h3>
+      <p>まずキャッシュ型な時点でAと同じ理由で外れます。さらにS3 Glacierは<strong>めったに出さないものを安くしまっておく冷凍庫</strong>で、取り出しに手間と時間がかかります。毎日使うデータの置き場ではありません。</p>
+      <p class="why">本体の置き場所が逆なうえ、別リージョンへの保管も問題文が求めていない余計な条件です。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>D. 仮想テープライブラリーを構成し、仮想テープをS3に保存する</h3>
+      <p>仮想テープライブラリは、昔ながらのテープ装置をAWSで置き換えるための仕組みです。テープは<strong>しまい込んで、必要なときに取り出すもの</strong>。順番に読む前提なので、日常的に読み書きするディスクの代わりにはなりません。</p>
+      <p class="why">ヒント1の「単一の論理ボリュームとして運用する」を満たしません。</p>
+    </div>
+  </div>
+
+  <h2>正解の動きを追いかける</h2>
+  <div class="flow">
+    <div class="step"><div class="ico"><img src="assets/icons/aws-storage-gateway.svg" alt=""></div><div class="num">1</div><div class="ttl">ゲートウェイを設置</div>
+      <div class="sub">オンプレ側に保管型のボリュームゲートウェイを置く。サーバーからは今までどおり1本のディスクに見える。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="ico"><img src="assets/icons/gen-disk.svg" alt=""></div><div class="num">2</div><div class="ttl">読み書きは手元で完結</div>
+      <div class="sub">3TBのデータは全部ローカルにある。印刷ファイルを開く速さは今までと変わらない。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="ico"><img src="assets/icons/amazon-simple-storage-service.svg" alt=""></div><div class="num">3</div><div class="ttl">S3へ自動でバックアップ</div>
+      <div class="sub">決めたスケジュールで、変わった分だけがスナップショットとしてS3へ送られる。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="ico"><img src="assets/icons/gen-recover.svg" alt=""></div><div class="num">4</div><div class="ttl">壊れても戻せる</div>
+      <div class="sub">ローカルのディスクが故障しても、S3のスナップショットから復元できる。年500GBの増加分も自動でバックアップされ続ける。</div></div>
+  </div>
+  <p class="caption">人間がやることは、ゲートウェイを1回置いてスナップショットの時刻を決めるだけ。以降のバックアップは自動です。</p>
+
+  <div class="kotae">
+    <p><strong>答え：B　Amazon S3への移転スケジュールが設定されたスナップショットを利用する保管型ボリュームをAWS上に構成して、保管ボリュームをオンプレミス環境に設定する</strong></p>
+    <p class="oboe">覚え方 —— <strong>Storage Gatewayのボリュームは「データの本体がどこにあるか」だけで決まる。ローカルが本体なら保管型（Stored）、S3が本体なら キャッシュ型（Cached）。</strong>「ローカルをメイン／S3はバックアップ」と書いてあれば保管型、「ローカルの容量を減らしたい」と書いてあればキャッシュ型です。あわせて、<strong>共有フォルダならファイル、1本のディスクならボリューム、テープの置き換えならテープ</strong>の3タイプも押さえておけば、この分野は取りこぼしません。</p>
+  </div>`
+  },
+
   ],
 };
