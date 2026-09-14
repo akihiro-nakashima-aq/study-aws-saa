@@ -476,5 +476,142 @@ const EXAM = {
   </div>`
   },
 
+  {
+    id: 'e1q5',
+    q: 'ある企業がAWS上で3層アプリケーションを開発しています。あなたはソリューションアーキテクトとして、このアプリケーションを複数のマイクロサービスに分割し、疎結合化することが求められています。その際、マイクロサービスの構築にはコンテナを利用します。また、運用要件として、AWS上でのコンテナ用コンピュートリソースの構成管理を不要にすることが求められています。この要件を満たすために、どのようなアプローチを取るべきでしょうか。',
+    choices: [
+      'Amazon ECSクラスターをEC2起動モードでプロビジョニングする。ECSクラスターのEC2ノードにAmazon EC2 Auto Scalingグループをアタッチし、コンテナにタスクを定義する',
+      'AWS Lambda関数を作成して、マイクロサービスのコンポーネントを構成する。これらの関数をAmazon API Gatewayと統合して、スケーリングとトラフィック制御を実施する',
+      'Amazon ECSクラスターをEC2起動モードでプロビジョニングする。コンテナにEC2タスクをデプロイする',
+      'Amazon ECSクラスターをFargate起動モードでプロビジョニングする。コンテナにFargateタスクをデプロイする',
+    ],
+    answer: 3,
+    explain: `
+  <h2>まず、問題文の中の「3つのヒント」</h2>
+  <p>選択肢を見ると、ECSが3つ並んでいて、そのうち2つは同じ「EC2起動モード」です。つまり問われているのは<strong>サービス選びではなく、その中の設定</strong>。問題文のどの言葉がそれを決めているのかを取り出します。</p>
+  <table>
+    <tr><th style="width:36%">問題文のことば</th><th>ここから分かること</th></tr>
+    <tr><td>マイクロサービスに分割し、疎結合化</td><td>小さな部品に分けて、それぞれが独立して動くようにする</td></tr>
+    <tr><td>マイクロサービスの構築には<strong>コンテナを利用します</strong></td><td>コンテナと名指しされている。関数（Lambda）ではない</td></tr>
+    <tr><td>コンテナ用コンピュートリソースの<strong>構成管理を不要に</strong></td><td><mark>コンテナを動かすサーバーを、自分で用意も管理もしない</mark></td></tr>
+  </table>
+  <p class="caption">3行目の「コンピュートリソース」とは、コンテナが動く土台のサーバーのことです。その<strong>構成管理が要らない</strong>＝台数もOSも自分では触らない、という意味になります。</p>
+
+  <h2>決め手は「自分で管理する範囲がどこまでか」</h2>
+  <p>Amazon ECSでコンテナを動かすとき、<strong>動かす場所</strong>を2つから選びます。選び方ひとつで、自分が面倒を見る範囲がまるごと変わります。</p>
+
+  <div class="vs">
+    <div class="pane bad">
+      <div class="pane-h">✕ EC2起動タイプ</div>
+      <div class="zone ng">
+        <span class="zlbl">自分で管理する範囲</span>
+        <div class="nodes v">
+          <div class="node ng">
+            <span class="ico"><img src="assets/icons/amazon-elastic-container-service.svg" alt=""></span>
+            <span class="lbl">コンテナ（タスク）</span>
+          </div>
+          <div class="node ng"><span class="lbl">Docker・ECSエージェント</span></div>
+          <div class="node ng"><span class="lbl">OSとパッチ当て</span></div>
+          <div class="node ng">
+            <span class="ico"><img src="assets/icons/amazon-ec2-auto-scaling.svg" alt=""></span>
+            <span class="lbl">EC2の台数調整</span>
+          </div>
+          <div class="node ng">
+            <span class="ico"><img src="assets/icons/amazon-ec2.svg" alt=""></span>
+            <span class="lbl">EC2インスタンス</span>
+          </div>
+        </div>
+      </div>
+      <p class="note">コンテナの中身より、その下の土台の世話のほうが仕事量が多くなります。</p>
+    </div>
+    <div class="pane good">
+      <div class="pane-h">◯ Fargate起動タイプ</div>
+      <div class="zone ok">
+        <span class="zlbl">自分で管理する範囲</span>
+        <div class="nodes v">
+          <div class="node ok">
+            <span class="ico"><img src="assets/icons/amazon-elastic-container-service.svg" alt=""></span>
+            <span class="lbl">コンテナ（タスク）</span>
+          </div>
+        </div>
+      </div>
+      <div class="nodes v">
+        <div class="node dim">
+          <span class="ico"><img src="assets/icons/aws-fargate.svg" alt=""></span>
+          <span class="lbl">Fargate</span>
+          <span class="sub">土台はAWSが持つ。こちらからは見えない</span>
+        </div>
+      </div>
+      <p class="note">「CPUとメモリをいくつ使う」と書くだけ。サーバーは1台も出てきません。</p>
+    </div>
+  </div>
+  <p class="caption">枠の大きさの差がそのまま仕事量の差です。問題文が言う「構成管理を不要に」は、この枠を1段まで小さくしてほしい、という意味になります。</p>
+
+  <p>たとえるなら、<mark>EC2起動タイプは工場を自分で建てて、その中で作業する</mark>やり方。建物の掃除も電気も耐震工事も自分持ちです。Fargateは<strong>貸し作業スペースを時間で借りる</strong>やり方。建物の面倒は大家さんが見てくれるので、こちらは作業そのものに集中できます。</p>
+
+  <h2>まぎらわしい4つを区別する</h2>
+  <p>この分野は「何を動かすか」と「どこで動かすか」がごちゃ混ぜになりがちです。分けて覚えます。</p>
+  <table>
+    <tr><th style="width:24%">名前</th><th style="width:20%">決めるもの</th><th style="width:26%">たとえ</th><th>まちがえやすい点</th></tr>
+    <tr><td>Amazon ECS／EKS</td><td>何をどれだけ動かすか</td><td>現場監督</td><td>これ自体は場所を決めていない</td></tr>
+    <tr><td>EC2起動タイプ</td><td>どこで動かすか</td><td>自分で建てた工場</td><td class="bad">EC2の台数・OSの管理が自分に残る</td></tr>
+    <tr><td class="good">Fargate起動タイプ</td><td class="good">どこで動かすか</td><td class="good">借りた作業スペース</td><td class="good">サービス名ではなく<strong>ECS／EKSの設定</strong></td></tr>
+    <tr><td>AWS Lambda</td><td>何を動かすか</td><td>単発の作業を頼む</td><td class="bad">動かすのは関数。コンテナの置き場ではない</td></tr>
+  </table>
+  <p class="caption">いちばんの誤解は<strong>「Fargateは独立したサービス」と思ってしまうこと</strong>。実際はECSやEKSに対して「場所はおまかせで」と指定する起動タイプです。</p>
+
+  <h2>選択肢を1つずつ丸つけする</h2>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>A. ECSをEC2起動モードで構成し、EC2ノードにAuto Scalingグループをアタッチする</h3>
+      <p>Auto Scalingグループは「混んできたらEC2を増やし、空いたら減らす仕組み」です。自動ではありますが、<strong>何台まで増やすか、どの種類のEC2にするか、いつ減らすかを決めるのは自分</strong>です。</p>
+      <p class="why">ヒント3の「構成管理を不要に」に反します。自動化しただけで、管理する対象は残ったままです。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>B. Lambda関数でマイクロサービスを作り、API Gatewayと統合する</h3>
+      <p>これ自体は疎結合なマイクロサービスの作り方として正しい構成です。サーバーの管理も要りません。ただしLambdaが動かすのは<strong>関数</strong>であって、コンテナではありません。</p>
+      <p class="why">ヒント2で「コンテナを利用します」と名指しされています。コンテナと書かれた時点でこの選択肢は消えます。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark x">✕</div>
+    <div>
+      <h3>C. ECSをEC2起動モードで構成し、コンテナにEC2タスクをデプロイする</h3>
+      <p>Aから台数調整の仕組みを取り除いただけで、EC2を自分で用意する点は変わりません。むしろ増減も手作業になるぶん、Aより手間が増えます。</p>
+      <p class="why">Aと同じくヒント3を満たしません。EC2という言葉が出てきた時点で、土台の管理は自分に残ります。</p>
+    </div>
+  </div>
+
+  <div class="choice">
+    <div class="mark o">◯</div>
+    <div>
+      <h3>D. ECSをFargate起動モードで構成し、コンテナにFargateタスクをデプロイする</h3>
+      <p>コンテナで作り（ヒント2）、サービスごとに独立して動かせて（ヒント1）、土台のサーバーはAWSが持つ（ヒント3）。指定するのは「このコンテナにCPUいくつ、メモリいくつ」だけです。</p>
+      <p class="why">3つのヒントを全部満たすのはこれだけです。</p>
+    </div>
+  </div>
+
+  <h2>「構成管理の手間」で並べると</h2>
+  <table>
+    <tr><th style="width:28%">やり方</th><th style="width:36%">自分がやること</th><th>判定</th></tr>
+    <tr><td>D　ECS ＋ Fargate</td><td>コンテナとCPU・メモリの指定だけ</td><td class="good">要件どおり</td></tr>
+    <tr><td>A　ECS ＋ EC2 ＋ Auto Scaling</td><td>EC2の種類・台数の設計、OSの更新</td><td class="bad">構成管理が残る</td></tr>
+    <tr><td>C　ECS ＋ EC2</td><td>上に加えて、増減も手作業</td><td class="bad">さらに手間が増える</td></tr>
+    <tr><td>B　Lambda ＋ API Gateway</td><td>関数の実装（管理は不要）</td><td class="bad">コンテナではない</td></tr>
+  </table>
+
+  <div class="kotae">
+    <p><strong>答え：D　Amazon ECSクラスターをFargate起動モードでプロビジョニングする。コンテナにFargateタスクをデプロイする</strong></p>
+    <p class="oboe">覚え方 —— <strong>「コンテナ」と書いてあれば ECS／EKS。そこに「サーバーを管理したくない」「構成管理は不要」が付いたら Fargate で確定。</strong>逆に<strong>「EC2起動タイプ」は、サーバーの中身まで自分で決めたいときの選択肢</strong>です。そして<strong>「サーバーレス」という言葉だけでLambdaに飛びつかないこと。</strong>問題文にコンテナと書いてあるなら、Lambdaは要件そのものを外します。</p>
+  </div>`
+  },
+
   ],
 };
