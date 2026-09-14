@@ -469,10 +469,10 @@ res-amazon-file-cache-on-premises-nfs-linked-datasets.svg
 res-amazon-file-cache-s3-linked-datasets.svg
 res-amazon-inspector-agent.svg
 res-amazon-location-service-geofence.svg
-res-amazon-location-service-map .svg
+res-amazon-location-service-map.svg
 res-amazon-location-service-place.svg
 res-amazon-location-service-routes.svg
-res-amazon-location-service-track .svg
+res-amazon-location-service-track.svg
 res-amazon-managed-blockchain-blockchain.svg
 res-amazon-mq-broker.svg
 res-amazon-msk-amazon-msk-connect.svg
