@@ -2127,7 +2127,7 @@ const EXAM = {
   <p class="caption">「12時間以内」は非常にゆるい条件です。<strong>リアルタイム処理は求められていない</strong>という意味なので、ここで選択肢がふるいにかけられます。</p>
 
   <h2>決め手は「1回の放送を、種類ごとの受け箱に仕分ける」</h2>
-  <p>登場するのは2つのサービスです。<strong>SNS（エスエヌエス）は校内放送</strong>で、1回しゃべると聞いている全員に届きます。<strong>SQS（エスキューエス）は各クラスの連絡ボックス</strong>で、入れたものは誰かが取り出すまで残ります。</p>
+  <p>登場するのは2つのサービスです。<strong>SNS（エスエヌエス）は放送</strong>で、1回しゃべると聞いている全員に届きます。<strong>SQS（エスキューエス）はレジの順番待ちの行列</strong>で、並んだ仕事は誰かが呼び出すまで消えません。</p>
   <p>この2つを組み合わせると、<strong>1件の注文を、種類に応じた受け箱に自動で仕分けられます</strong>。しかもSNSにはフィルターという機能があり、「これは書籍の注文」といった目印を見て、<mark>該当する受け箱にだけ届ける</mark>ことができます。</p>
 
   <div class="nodes">
@@ -2153,7 +2153,7 @@ const EXAM = {
   </div>
   <p class="caption">この形を<strong>ファンアウト</strong>と呼びます。入口は1つ、出口は種類の数だけ。注文の種類が増えても、<strong>入口はそのままでキューを1本足すだけ</strong>です。</p>
 
-  <p>たとえるなら、<mark>SNSは職員室からの校内放送、SQSは各クラスの連絡ボックス</mark>です。放送は1回流すだけ。ただし「これは3年生あて」という目印を付けておけば、3年生のボックスにだけ届きます。<strong>放送を聞き逃しても、ボックスに紙が残っているので大丈夫</strong>。これがSQSを挟む理由です。</p>
+  <p>たとえるなら、<mark>SNSは放送、SQSはレジの順番待ちの行列</mark>です。放送は1回流すだけ。ただし「これは書籍の注文」という目印を付けておけば、書籍担当の行列にだけ並びます。<strong>放送を聞き逃しても、行列に並んだままなので消えません</strong>。これがSQSを挟む理由です。</p>
 
   <h3>なぜSQSを挟むのか</h3>
   <p>SNSだけだと、放送は<strong>流した瞬間に聞いていた人にしか届きません</strong>。サーバーが再起動中だったら、その注文は消えます。SQSを挟めば、処理されるまでメッセージが残り続けます。12時間以内でよいのだから、<strong>溜めておけることのほうが価値があります</strong>。</p>
@@ -2161,8 +2161,8 @@ const EXAM = {
   <h2>まぎらわしい3つを区別する</h2>
   <table>
     <tr><th style="width:24%">名前</th><th style="width:24%">正体</th><th style="width:22%">たとえ</th><th>向いていない場面</th></tr>
-    <tr><td class="good">Amazon SNS</td><td class="good">同じ知らせを複数に配る</td><td class="good">校内放送</td><td class="good">1対多の配信。溜められないのでSQSと組む</td></tr>
-    <tr><td class="good">Amazon SQS</td><td class="good">処理されるまで溜める行列</td><td class="good">連絡ボックス</td><td class="good">あとで処理すればよい仕事に最適</td></tr>
+    <tr><td class="good">Amazon SNS</td><td class="good">同じ知らせを複数に配る</td><td class="good">放送</td><td class="good">1対多の配信。溜められないのでSQSと組む</td></tr>
+    <tr><td class="good">Amazon SQS</td><td class="good">処理されるまで溜める行列</td><td class="good">レジの順番待ちの行列</td><td class="good">あとで処理すればよい仕事に最適</td></tr>
     <tr><td>Kinesis Data Streams</td><td>流れ続けるデータを順番に</td><td>ベルトコンベア</td><td class="bad">シャード数の設計と管理が必要。リアルタイム不要なら過剰</td></tr>
   </table>
   <p class="caption">見分け方は<strong>「すぐ処理する必要があるか」</strong>。<strong>秒単位・リアルタイム・順番が大事 → Kinesis。数時間以内でよい・仕事の受け渡し → SQS。</strong></p>
@@ -3698,8 +3698,7 @@ const EXAM = {
       <p class="note">残り件数が数えられるので、台数の判断材料になります。処理が遅れてもジョブは消えません。</p>
     </div>
   </div>
-  <p class="caption">SNSは館内放送、SQSは受付の番号札の箱です。番号札なら「いま何人待ちか」が数えられます。</p>
-  <p>回転寿司のレーンを想像してください。SQSは<strong>レーンに皿をためておく</strong>方式で、職人が空いたら順に取ります。SNSは<strong>「いま注文が入りました」と店内放送する</strong>だけなので、聞いていなければその注文は消えてしまいます。</p>
+  <p class="caption">SNSは放送、SQSはレジの順番待ちの行列です。<strong>放送は一度流したら消えます</strong>が、行列に並んだ人は呼ばれるまでいなくなりません。しかも<mark>いま何人並んでいるかを数えられる</mark>ので、そのまま「何台で処理すべきか」の判断材料になります。</p>
 
   <h2>この問題には、まぎらわしい選択が3か所ある</h2>
   <table>
@@ -4574,7 +4573,7 @@ const EXAM = {
     </div>
   </div>
   <p class="caption">EventBridgeは合図を出すだけ、SNSは配るだけ。<strong>「10日以下か」を数えて文章を作る役は、間にいるLambdaしかいません。</strong></p>
-  <p>学校にたとえると分かりやすくなります。<strong>チャイム（EventBridge）は時間になれば鳴るだけ</strong>で、内容は判断しません。<strong>校内放送（SNS）は渡された原稿を読むだけ</strong>です。<mark>「あと10日だから連絡しよう」と考えて原稿を書く先生（Lambda）が間に必要</mark>なのです。</p>
+  <p>学校にたとえると分かりやすくなります。<strong>チャイム（EventBridge）は時間になれば鳴るだけ</strong>で、内容は判断しません。<strong>放送（SNS）は渡された原稿を読むだけ</strong>です。<mark>「あと10日だから連絡しよう」と考えて原稿を書く先生（Lambda）が間に必要</mark>なのです。</p>
 
   <h2>間にLambdaが要るのはなぜか</h2>
   <div class="vs">
@@ -5038,7 +5037,7 @@ const EXAM = {
     <tr><td>更新期間中のデータを保存する</td><td>失わないことが目的。速く書き込むことではない</td></tr>
   </table>
 
-  <h2>閉店中でも受け取れる「宅配ボックス」を置く</h2>
+  <h2>窓口が閉まっていても並べる「行列」を置く</h2>
   <div class="vs">
     <div class="pane bad">
       <div class="pane-h">✕ Lambdaから直接Auroraへ書く</div>
@@ -5077,12 +5076,12 @@ const EXAM = {
     </div>
   </div>
   <p class="caption">SQSを挟むことで、受け取る側とDBの都合が切り離されます。これを疎結合といいます。</p>
-  <p>これは<strong>宅配ボックス</strong>と同じ考え方です。家の人が留守（DBがアップグレード中）でも、荷物はボックスに入ります。帰ってきたら順番に取り込むだけです。ボックスがなければ、配達員は荷物を持ち帰るしかありません。</p>
+  <p>これは<strong>レジの順番待ちの行列</strong>と同じ考え方です。店員が席を外していても（DBがアップグレード中）、お客さんは列に並んだまま待っています。戻ってきたら先頭から順に対応するだけです。列がなければ、お客さんは帰るしかありません。</p>
 
   <h2>まぎらわしい4つを区別する</h2>
   <table>
     <tr><th style="width:26%">名前</th><th style="width:34%">正体</th><th>できないこと・向かないこと</th></tr>
-    <tr><td class="good">Amazon SQSキュー</td><td class="good">メッセージを預かる宅配ボックス。既定4日、最大14日保持できる</td><td>書き込みが即座に反映されるわけではない（今回はそれで構わない）</td></tr>
+    <tr><td class="good">Amazon SQSキュー</td><td class="good">メッセージを預かる順番待ちの行列。既定4日、最大14日保持できる</td><td>書き込みが即座に反映されるわけではない（今回はそれで構わない）</td></tr>
     <tr><td>Lambdaのローカルストレージ（/tmp）</td><td>実行中だけ使える一時的な作業場</td><td><strong>実行が終われば中身は保証されない。</strong>あとから別の処理がスキャンすることもできない</td></tr>
     <tr><td>Lambdaの実行時間延長＋再試行</td><td>最長15分まで待たせて、失敗したら繰り返す</td><td><strong>アップグレードが15分を超えたら全滅。</strong>その間ずっとLambdaが動き続けるので費用も無駄</td></tr>
     <tr><td>Amazon RDS Proxy</td><td>DBへの接続をまとめて再利用する<strong>接続の交通整理役</strong>。フェイルオーバーを速くする効果もある</td><td><strong>データをためる機能はない。</strong>DBが長時間不在の間、書き込みを預かることはできない</td></tr>
