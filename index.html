@@ -31,6 +31,7 @@
   .topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
     padding-bottom:14px;border-bottom:1px solid var(--rule);margin-bottom:28px;}
   .topbar .spacer{flex:1;}
+  .topbar.bottom{margin:3em 0 0;padding:20px 0 0;border-bottom:0;border-top:1px solid var(--rule);}
   .btn{background:#fff;border:1px solid var(--rule);border-radius:3px;padding:6px 14px;font-size:.9rem;color:var(--ink);}
   .btn:hover{border-color:var(--ink);}
   .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
@@ -245,14 +246,17 @@ function renderQuestion(idx){
   let picked = [];
   let graded = false;
 
+  const nav = pos => `
+      <div class="topbar${pos === 'bottom' ? ' bottom' : ''}">
+        <button class="btn" data-nav="back">← 一覧へ</button>
+        <span class="spacer"></span>
+        <button class="btn" data-nav="prev" ${idx===0?'disabled':''}>前の問題</button>
+        <button class="btn" data-nav="next" ${idx===EXAM.questions.length-1?'disabled':''}>次の問題</button>
+      </div>`;
+
   function draw(){
     app.innerHTML = `
-      <div class="topbar">
-        <button class="btn" id="back">← 一覧へ</button>
-        <span class="spacer"></span>
-        <button class="btn" id="prev" ${idx===0?'disabled':''}>前の問題</button>
-        <button class="btn" id="next" ${idx===EXAM.questions.length-1?'disabled':''}>次の問題</button>
-      </div>
+      ${nav()}
       <h1>第${idx+1}問</h1>
       <div class="qbox"><p>${esc(q.q)}</p></div>
       ${multi ? `<p class="hint">${asArr(q.answer).length}つ選んでください。</p>` : ''}
@@ -261,11 +265,12 @@ function renderQuestion(idx){
         return `<li><button class="pick ${cls}" data-i="${i}" aria-pressed="${picked.includes(i)}">
           <span class="key">${KEYS[i]}</span><span>${esc(c)}</span></button></li>`;
       }).join('')}</ul>
-      ${graded ? verdictHtml() : `<p><button class="btn primary" id="grade" ${picked.length?'':'disabled'}>答え合わせ</button></p>`}`;
+      ${graded ? verdictHtml() : `<p><button class="btn primary" id="grade" ${picked.length?'':'disabled'}>答え合わせ</button></p>`}
+      ${nav('bottom')}`;
 
-    app.querySelector('#back').onclick = renderList;
-    app.querySelector('#prev').onclick = () => renderQuestion(idx-1);
-    app.querySelector('#next').onclick = () => renderQuestion(idx+1);
+    app.querySelectorAll('[data-nav="back"]').forEach(b => b.onclick = renderList);
+    app.querySelectorAll('[data-nav="prev"]').forEach(b => b.onclick = () => renderQuestion(idx-1));
+    app.querySelectorAll('[data-nav="next"]').forEach(b => b.onclick = () => renderQuestion(idx+1));
     if (!graded){
       app.querySelectorAll('.pick').forEach(b => b.onclick = () => {
         const i = +b.dataset.i;
