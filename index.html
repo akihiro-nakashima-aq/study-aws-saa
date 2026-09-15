@@ -93,7 +93,9 @@
   .choice .mark.o{color:var(--ok);} .choice .mark.x{color:var(--redpen);}
   .choice h3{margin:0 0 .4em;}
   .choice p{margin:0 0 .6em;}
-  .why{font-size:.9rem;color:var(--ink-soft);}
+  .why{font-size:.93rem;color:var(--ink);border-left:3px solid var(--rule);padding-left:.8em;}
+  .choice:has(.mark.o) .why{border-left-color:var(--ok);}
+  .choice:has(.mark.x) .why{border-left-color:var(--redpen);}
   /* 流れ図 */
   .flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:1.6em 0;}
   .flow .step{flex:1;min-width:150px;background:#fff;border:1px solid var(--rule);padding:14px 16px;}

@@ -34,11 +34,17 @@ const r={questions:EXAM.questions.length, images:imgs.length,
   choicesMismatch:EXAM.questions.filter(q=>{const a=Array.isArray(q.answer)?q.answer:[q.answer];
     return a.some(i=>i<0||i>=q.choices.length)}).map(q=>q.id),
   choiceBlocks:EXAM.questions.map(q=>[q.id,(q.explain.match(/class="choice"/g)||[]).length,q.choices.length])
-    .filter(x=>x[1]!==x[2])};
+    .filter(x=>x[1]!==x[2]),
+  multiMark:EXAM.questions.filter(q=>(q.explain.match(/<mark>/g)||[]).length!==1).map(q=>q.id),
+  noHintNo:EXAM.questions.filter(q=>!/<th style="width:2.2em">#<\/th>/.test(q.explain)).map(q=>q.id),
+  longOboe:EXAM.questions.filter(q=>{const m=q.explain.match(/class="oboe">([\s\S]*?)<\/p>/);
+    return !m||m[1].replace(/<[^>]+>/g,'').length>90}).map(q=>q.id),
+  tooBold:EXAM.questions.map(q=>[q.id,(q.explain.match(/<strong>/g)||[]).length])
+    .filter(x=>x[1]>12)};
 d.remove(); r
 ```
 
-`broken` `missingKotae` `choicesMismatch` `choiceBlocks` が**すべて空**なら合格。
+`broken` `missingKotae` `choicesMismatch` `choiceBlocks` `multiMark` `noHintNo` `longOboe` `tooBold` が**すべて空**なら合格。
 
 ## データの形
 
@@ -64,14 +70,16 @@ d.remove(); r
 <h2>まず、問題文の中の「3つのヒント」</h2>
 <p>問題文には、答えを決めるためのヒントが3つ隠れています。読み飛ばすと選択肢が全部それっぽく見えてしまうので、先に取り出しておきます。</p>
 <table>
-  <tr><th style="width:34%">問題文のことば</th><th>ここから分かること</th></tr>
-  <tr><td>Windowsサーバー</td><td>Windowsが動く場所が必要。どこでも動くわけではない</td></tr>
-  <tr><td>最大1時間</td><td>1時間動ける仕組みでないとダメ。<mark>そして残りの23時間はヒマ</mark></td></tr>
+  <tr><th style="width:2.2em">#</th><th style="width:34%">問題文のことば</th><th>ここから分かること</th></tr>
+  <tr><td>①</td><td>Windowsサーバー</td><td>Windowsが動く場所が必要。どこでも動くわけではない</td></tr>
+  <tr><td>②</td><td>最大1時間</td><td>1時間動ける仕組みでないとダメ。<mark>そして残りの23時間はヒマ</mark></td></tr>
 </table>
 ```
 
 - ヒントは2〜4個。5個以上に散らさない。
-- 一番の決め手には `<mark>` を1か所だけ入れる。
+- **番号列（①②③）を必ず付ける。** ④の `.why` から「ヒント②を満たさない」と参照するので、番号がないと読者が数え直すことになる。参照も `ヒント②` の丸数字で書く。
+- 一番の決め手には `<mark>` を1か所だけ入れる。**解説全体で `<mark>` はこの1か所だけ。**
+- この表のセルに `<strong>` を使わない。`<mark>` が効かなくなる。
 
 ### ② 決め手を図にする　【必須】
 
@@ -95,8 +103,16 @@ d.remove(); r
 | 役割が違うのに全部「処理する」に見える | EventBridge（合図）／Batch（実行）／Step Functions（指揮）／Lambda（短い処理） |
 | 同じカテゴリの中の選び分け | Storage Gatewayのファイル／ボリューム／テープ |
 
+**見出しは「まぎらわしい3つを区別する」と書かない。** 表から読み取れる結論を見出しにする。
+見出しだけ拾い読みしても要点が入るようにする。
+
+| ✕ 型の名前 | ◯ 結論 |
+|---|---|
+| まぎらわしい4つを区別する | EventBridgeは数えられない、SNSは判断しない |
+| まぎらわしい4つを区別する | 読み取りを増やすのはリードレプリカ。マルチAZは増やさない |
+
 ```html
-<h2>まぎらわしい3つを区別する</h2>
+<h2>EventBridgeは数えられない、SNSは判断しない</h2>
 <table>
   <tr><th style="width:26%">名前</th><th style="width:34%">役割（たとえ）</th><th>できないこと</th></tr>
   <tr><td>Amazon EventBridge</td><td>決まった時刻に鳴る目覚まし時計</td><td>自分では処理しない</td></tr>
@@ -158,14 +174,29 @@ d.remove(); r
 ```html
 <div class="kotae">
   <p><strong>答え：A　AWS Batch でEC2インスタンス（Windows）を起動し、EventBridgeで日次スケジュールを設定する</strong></p>
-  <p class="oboe">覚え方 —— <strong>15分を超えるならLambdaは消える。時々しか動かない処理はAWS Batchに任せる。</strong>この2つで、同じ形の問題はだいたい解けます。</p>
+  <p class="oboe">覚え方 —— <strong>15分を超える処理はLambdaを消す。時々しか動かない処理はAWS Batch。</strong></p>
 </div>
 ```
 
 覚え方は**次に似た問題が出たとき使える判定ルール**にする。この問題の答えの繰り返しにしない。
 数字（15分、5分、99.999999999%）は覚え方に入れる価値が高い。
 
+**1文で終わらせる。目安60字、最大80字。** 補足・関連知識・「あわせて〜も覚えておきましょう」は書かない。
+それらは③の表にすでに書いてあるか、別の問題で扱う内容である。長い覚え方は覚えられない。
+
 ---
+
+## 強調のルール
+
+**強調が多いと、何も強調されていないのと同じになる。** 次の上限を守る。
+
+| 場所 | `<strong>` |
+|---|---|
+| ふつうの `<p>`、表のセル | **1つまで** |
+| `.why` `.caption` `.note` `.sub`、①のヒント表 | **使わない**（`.why` はCSSで色と縦線が付くので、それ自体が強調） |
+| `.oboe`（覚え方） | 判定ルール1文をまるごと囲む1つだけ |
+
+`<mark>` は**解説全体で1か所だけ**。①のヒント表の決め手に使う。
 
 ## 文章のルール
 
@@ -346,7 +377,8 @@ grep -iE "kubernetes|container" assets/icons/INDEX.txt
 
 解説を書き終えたら全部確認する。1つでも欠けていたら直す。
 
-- [ ] ①のヒント表がある。決め手に `<mark>` が1か所ある
+- [ ] ①のヒント表がある。**番号列（①②③）がある**。決め手に `<mark>` が1か所ある
+- [ ] `<mark>` が解説全体で**1か所だけ**になっている
 - [ ] 図解パーツを**2つ以上**使っている（①の表は数えない）
 - [ ] **`.bars` を構造の説明に使っていない**（数値の大小のときだけ）
 - [ ] 構成・経路の説明に矩形と矢印の図（`.nodes`）を使っている
@@ -358,8 +390,11 @@ grep -iE "kubernetes|container" assets/icons/INDEX.txt
 - [ ] **全部の**選択肢に `.choice` がある。`.why` が全部に入っている
 - [ ] ✕の理由が「どのヒントを満たさないか」になっている
 - [ ] ③の区別の表に「できないこと／向かないこと」の列がある
+- [ ] ③の見出しが「まぎらわしいN個を区別する」ではなく、**結論の文**になっている
+- [ ] `<strong>` が1段落・1セルにつき1つまで。`.why` `.caption` `.note` `.sub` には入れていない
 - [ ] **②で構成図を描いたなら `.flow` を入れていない**（入れたなら組み合わせの連携を説明している）
 - [ ] `.kotae` の覚え方が、**次の問題に使える判定ルール**になっている
+- [ ] 覚え方が**1文・80字以内**で、補足が付いていない
 - [ ] 「〜かもしれません」「〜と思います」が1つもない
 - [ ] 初出のAWSサービスに、たとえか言い換えがついている
 - [ ] `id` が既存と重複していない
